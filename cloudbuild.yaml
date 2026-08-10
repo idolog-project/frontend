@@ -11,11 +11,11 @@
 # 트리거 설정
 #   구성 > 유형   : Cloud Build 구성 파일(YAML 또는 JSON)
 #   구성 > 위치   : 저장소, /cloudbuild.yaml
-#   고급 > 대체 변수: 기존 _AR_* 등은 그대로 두고 _KAKAO_JS_KEY 만 추가
+#   고급 > 대체 변수: 기존 _AR_* 등은 그대로 두고 _KAKAO_MAP_KEY 만 추가
 
 substitutions:
   # 카카오 개발자 콘솔 > 플랫폼 키 > JavaScript 키. 비면 대체 지도로 뜬다.
-  _KAKAO_JS_KEY: ''
+  _KAKAO_MAP_KEY: ''
   # 백엔드가 실제로 응답하는 날 'false'. 그러면 목 데이터가 번들에서 빠진다.
   _ENABLE_MOCKS: 'true'
 
@@ -24,7 +24,7 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - build
-      - --build-arg=VITE_KAKAO_MAP_KEY=${_KAKAO_JS_KEY}
+      - --build-arg=VITE_KAKAO_MAP_KEY=${_KAKAO_MAP_KEY}
       - --build-arg=VITE_ENABLE_MOCKS=${_ENABLE_MOCKS}
       - -t
       - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}
