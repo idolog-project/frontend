@@ -18,6 +18,12 @@ COPY . .
 ARG VITE_KAKAO_MAP_KEY=""
 ENV VITE_KAKAO_MAP_KEY=$VITE_KAKAO_MAP_KEY
 
+# There is no backend yet, so the deployed app answers its own API from MSW.
+# Build with this off once the real API is up — the flag is what keeps the mock
+# data out of the bundle.
+ARG VITE_ENABLE_MOCKS="true"
+ENV VITE_ENABLE_MOCKS=$VITE_ENABLE_MOCKS
+
 RUN npm run build
 
 # ---------- serve ----------
