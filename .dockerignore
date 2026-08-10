@@ -1,0 +1,27 @@
+# The build stage does `COPY . .`, so anything not listed here is shipped into
+# the build context. Keep it to what `npm run build` actually reads.
+
+node_modules
+dist
+.git
+.github
+
+# Never into an image layer: it carries real key values. The build takes the
+# Kakao key as --build-arg instead.
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+.vscode
+.idea
+
+# Local scratch, not part of the app.
+.probe-out
+__probe.tsx
+__shim.mjs
+__shim2.mjs
+
+Dockerfile
+.dockerignore
