@@ -1,0 +1,58 @@
+# Cloud Run 의 소스 배포가 자동 생성한 빌드 구성을 그대로 옮겨 적고, --build-arg
+# 두 개만 더한 것이다.
+#
+# 왜 필요한가: 트리거를 "Dockerfile" 유형으로 두면 --build-arg 를 넘길 수단이
+# 없다. Vite 는 VITE_* 를 빌드 시점에 번들로 인라인하므로 그 경로로는 카카오 키가
+# 빈 문자열로 굳고, 지도는 영원히 대체 지도로 뜬다.
+#
+# 이미지 경로와 배포 단계는 자동 생성본과 같은 형태를 유지한다 — 트리거가 이미
+# 그 경로로 배포해 왔으므로 여기서 바꾸면 배포 대상이 갈라진다.
+#
+# 트리거 설정
+#   구성 > 유형   : Cloud Build 구성 파일(YAML 또는 JSON)
+#   구성 > 위치   : 저장소, /cloudbuild.yaml
+#   고급 > 대체 변수: 기존 _AR_* 등은 그대로 두고 _KAKAO_JS_KEY 만 추가
+
+substitutions:
+  # 카카오 개발자 콘솔 > 플랫폼 키 > JavaScript 키. 비면 대체 지도로 뜬다.
+  _KAKAO_JS_KEY: ''
+  # 백엔드가 실제로 응답하는 날 'false'. 그러면 목 데이터가 번들에서 빠진다.
+  _ENABLE_MOCKS: 'true'
+
+steps:
+  - id: Build
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg=VITE_KAKAO_MAP_KEY=${_KAKAO_JS_KEY}
+      - --build-arg=VITE_ENABLE_MOCKS=${_ENABLE_MOCKS}
+      - -t
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}
+      - .
+      - -f
+      - Dockerfile
+
+  - id: Push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - ${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}
+
+  - id: Deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - services
+      - update
+      - ${_SERVICE_NAME}
+      - --platform=${_PLATFORM}
+      - --image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}
+      - --region=${_DEPLOY_REGION}
+      - --quiet
+
+options:
+  # 트리거에는 이 파일이 참조하지 않는 변수(_TRIGGER_ID 등)도 정의돼 있다. 기본
+  # 설정에서는 쓰이지 않은 대체 변수가 빌드를 실패시키므로 느슨하게 둔다.
+  substitutionOption: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
