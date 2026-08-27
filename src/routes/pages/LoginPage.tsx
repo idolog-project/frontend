@@ -1,8 +1,9 @@
-import { useNavigate } from 'react-router'
+import { useState } from 'react'
+import { useSearchParams } from 'react-router'
 
+import { startGoogleLogin } from '@/api/endpoints'
 import { Button } from '@/components/ui/Button'
 import { Eyebrow } from '@/components/ui/Chip'
-import { messageFor, useGoogleLogin } from '@/features/auth/useAuth'
 import { useT } from '@/features/locale/useT'
 import { SCENE } from '@/mocks/images'
 import { AuthLayout } from './AuthLayout'
@@ -33,8 +34,13 @@ function GoogleMark() {
 
 export function LoginPage() {
   const t = useT()
-  const navigate = useNavigate()
-  const googleLogin = useGoogleLogin()
+  const [params] = useSearchParams()
+  // Sign-in leaves the page for Google, so there is no request to track — only
+  // the moment between the click and the browser giving up this document.
+  const [leaving, setLeaving] = useState(false)
+
+  // Set by the callback route when the round trip came back without a session.
+  const failed = params.get('error') === 'oauth'
 
   // Always land on the map after signing in. The brief (§4) asked for a return
   // to the interrupted path; that was overridden by a later decision — every
@@ -54,25 +60,21 @@ export function LoginPage() {
         <Button
           variant="primary"
           fullWidth
-          disabled={googleLogin.isPending}
-          icon={googleLogin.isPending ? undefined : <GoogleMark />}
-          onClick={() =>
-            googleLogin.mutate(undefined, {
-              onSuccess: () => navigate('/', { replace: true }),
-            })
-          }
+          disabled={leaving}
+          icon={leaving ? undefined : <GoogleMark />}
+          onClick={() => {
+            setLeaving(true)
+            startGoogleLogin()
+          }}
         >
-          {googleLogin.isPending ? t('login.pending') : t('login.google')}
+          {leaving ? t('login.pending') : t('login.google')}
         </Button>
 
-        {googleLogin.isError && (
+        {failed && (
           <p role="alert" className="text-body-sm text-danger">
-            {messageFor(googleLogin.error, t('login.failed'))}
+            {t('login.failed')}
           </p>
         )}
-
-        {/* Removed once real OAuth is wired — see `googleLogin` in api/endpoints. */}
-        <p className="text-caption text-text-subtle">{t('login.devNotice')}</p>
       </div>
     </AuthLayout>
   )

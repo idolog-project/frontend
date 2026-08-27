@@ -4,7 +4,8 @@ import { useLocaleStore } from '@/features/locale/store'
 import { translate } from '@/features/locale/useT'
 import { apiErrorSchema } from './schemas'
 
-const BASE_URL = '/api'
+/** Backend serves under a versioned prefix — backend `docs/FRONTEND_API_SPEC.md`. */
+export const BASE_URL = '/api/v1'
 
 /**
  * Access token lives in memory only — never localStorage — and rides on the
@@ -61,6 +62,22 @@ const acceptLanguage = () => {
   return locale === 'zh' ? 'zh-Hans, zh;q=0.9' : `${locale}, en;q=0.9`
 }
 
+/**
+ * The backend wraps every success in `{ isSuccess, code, message, result }`.
+ * Screens want the payload, so the envelope is opened here and nowhere else.
+ *
+ * Errors are deliberately left alone: the spec keeps `code` and `message` at
+ * the top level of an error body, which is what `toApiError` reads.
+ */
+function unwrap(path: string, body: unknown): unknown {
+  if (typeof body === 'object' && body !== null && 'result' in body) {
+    return (body as { result: unknown }).result
+  }
+  throw new SchemaError(path, [
+    { message: 'response was not the { isSuccess, code, message, result } envelope' },
+  ])
+}
+
 async function toApiError(res: Response): Promise<ApiError> {
   let code = 'UNKNOWN'
   let message = translate(currentLocale(), 'error.generic')
@@ -87,8 +104,8 @@ async function refreshAccessToken(): Promise<boolean> {
         credentials: 'include',
       })
       if (!res.ok) return false
-      const data = (await res.json()) as { accessToken?: string }
-      if (!data.accessToken) return false
+      const data = unwrap('/auth/refresh', await res.json()) as { accessToken?: string }
+      if (!data?.accessToken) return false
       setAccessToken(data.accessToken)
       return true
     } catch {
@@ -99,6 +116,12 @@ async function refreshAccessToken(): Promise<boolean> {
   })()
   return refreshInFlight
 }
+
+/**
+ * Exchanges the refresh cookie for an access token. Exported for the OAuth
+ * callback, which lands holding nothing but that cookie.
+ */
+export const refreshSession = (): Promise<boolean> => refreshAccessToken()
 
 async function rawRequest(path: string, options: RequestOptions): Promise<Response> {
   const { method = 'GET', body, signal } = options
@@ -145,7 +168,7 @@ export async function request<T>(
 
   if (res.status === 204) return schema.parse(undefined)
 
-  const parsed = schema.safeParse(await res.json())
+  const parsed = schema.safeParse(unwrap(path, await res.json()))
   if (!parsed.success) throw new SchemaError(path, parsed.error.issues)
   return parsed.data
 }

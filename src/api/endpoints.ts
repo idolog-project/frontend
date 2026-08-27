@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { request } from './client'
+import { BASE_URL, request } from './client'
 import {
   authTokensSchema,
   courseListSchema,
@@ -13,25 +13,26 @@ import {
 } from './schemas'
 
 /**
- * Every network call the app makes lives here. ASSUMPTION: paths follow the
- * brief (§6) and are not yet confirmed with the backend team.
+ * Every network call the app makes lives here. Paths follow the agreed contract
+ * in the backend repo's `docs/FRONTEND_API_SPEC.md`.
  */
 
 // ---- auth ----------------------------------------------------------------
 
 /**
- * Google is the only sign-in route in the product right now.
+ * Google is the only sign-in route in the product right now, and it is a full
+ * browser redirect rather than a fetch: the page leaves for the backend, which
+ * bounces to Google and finally returns to `/auth/callback` with the refresh
+ * cookie set. The access token never travels in a URL.
  *
- * ASSUMPTION / TEMPORARY: the real flow is a redirect — the browser leaves for
- * Google and comes back to a callback that sets the session. OAuth is not wired
- * yet, so this posts directly and the mock hands back a session immediately.
- * When the backend lands, replace the body of `googleLogin` with
- * `window.location.href = GOOGLE_REDIRECT_URL` and drop the mock handler.
+ * Nothing comes back to the caller — by the time the request resolves the page
+ * is gone — so this returns void rather than a promise of a session.
  */
-export const GOOGLE_REDIRECT_URL = '/api/oauth/google'
+export const GOOGLE_LOGIN_URL = `${BASE_URL}/auth/login/google`
 
-export const googleLogin = () =>
-  request('/auth/oauth/google', authTokensSchema, { method: 'POST' })
+export const startGoogleLogin = (): void => {
+  window.location.assign(GOOGLE_LOGIN_URL)
+}
 
 export const logout = () => request('/auth/logout', z.unknown(), { method: 'POST' })
 
@@ -42,8 +43,12 @@ export const getMe = () => request('/auth/me', userSchema)
  * Kept because the backend contract still lists them and the screens may come
  * back; delete both if the team confirms Google-only for good.
  */
-export const signup = (body: { email: string; password: string; nickname: string }) =>
-  request('/auth/signup', authTokensSchema, { method: 'POST', body })
+export const signup = (body: {
+  email: string
+  password: string
+  nickname: string
+  preferredLanguage?: string
+}) => request('/auth/signup', userSchema, { method: 'POST', body })
 
 export const login = (body: { email: string; password: string }) =>
   request('/auth/login', authTokensSchema, { method: 'POST', body })

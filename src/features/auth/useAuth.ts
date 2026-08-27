@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-import { ApiError, setAccessToken } from '@/api/client'
+import { ApiError, refreshSession, setAccessToken } from '@/api/client'
 import * as api from '@/api/endpoints'
 import { useAuthStore } from './store'
 
@@ -34,19 +34,29 @@ export function useRestoreSession() {
 }
 
 /**
- * The only sign-in route in the UI. Signing up and signing in are the same
- * action with Google — a first-time account is created on the way through.
+ * Finishes the Google round trip. The callback route is reached with only the
+ * refresh cookie set — deliberately, so no access token is ever exposed in a
+ * URL — so the session is claimed by spending that cookie for a token.
+ *
+ * The whole app reloaded on the way back from Google, which is why this cannot
+ * live in the login screen's state.
  */
-export function useGoogleLogin() {
-  const signIn = useAuthStore((s) => s.signIn)
+export function useCompleteGoogleLogin() {
+  const { signIn, setAnonymous } = useAuthStore()
 
   return useMutation({
     mutationFn: async () => {
-      const { accessToken } = await api.googleLogin()
-      setAccessToken(accessToken)
+      const claimed = await refreshSession()
+      if (!claimed) {
+        throw new ApiError(401, 'UNAUTHENTICATED', 'oauth callback carried no session')
+      }
       return api.getMe()
     },
     onSuccess: signIn,
+    onError: () => {
+      setAccessToken(null)
+      setAnonymous()
+    },
   })
 }
 

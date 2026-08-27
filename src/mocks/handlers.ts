@@ -20,8 +20,22 @@ let savedCourses: Course[] = [courses[0]]
 
 const ACCESS_TOKEN = 'mock-access-token'
 
+/**
+ * The real service wraps every body in `{ isSuccess, code, message, result }`
+ * — backend `docs/FRONTEND_API_SPEC.md`. The mock has to wrap too, or the app
+ * would be written against a shape only the mock ever produces.
+ */
+const ok = (result: unknown, init?: ResponseInit) =>
+  HttpResponse.json(
+    { isSuccess: true, code: 'COMMON200', message: '요청에 성공했습니다.', result },
+    init,
+  )
+
 const fail = (status: number, code: ServerErrorCode, request: Request) =>
-  HttpResponse.json({ code, message: serverMessage(code, request) }, { status })
+  HttpResponse.json(
+    { isSuccess: false, code, message: serverMessage(code, request), result: null },
+    { status },
+  )
 
 const requireAuth = (request: Request) =>
   signedIn ? null : fail(401, 'UNAUTHENTICATED', request)
@@ -50,35 +64,35 @@ export const handlers = [
 
   // ---- auth --------------------------------------------------------------
   /**
-   * TEMPORARY: stands in for the Google OAuth round trip so the app is usable
-   * before the backend wires it. The real endpoint is a redirect, not a POST.
+   * Stands in for the whole Google round trip. The real endpoint bounces to
+   * Google and its callback returns to `/auth/callback` carrying only the
+   * refresh cookie; the mock skips Google and bounces straight back, so the
+   * app exercises the same navigation and the same cookie-for-token exchange.
    */
-  http.post('/api/auth/oauth/google', async () => {
+  http.get('/api/v1/auth/login/google', async () => {
     await delay(400)
     signedIn = true
-    return HttpResponse.json({ accessToken: ACCESS_TOKEN })
+    return new HttpResponse(null, { status: 302, headers: { Location: '/auth/callback' } })
   }),
 
-  http.post('/api/auth/logout', async () => {
+  http.post('/api/v1/auth/logout', async () => {
     signedIn = false
     return new HttpResponse(null, { status: 204 })
   }),
 
-  http.post('/api/auth/refresh', async ({ request }) =>
-    signedIn
-      ? HttpResponse.json({ accessToken: ACCESS_TOKEN })
-      : fail(401, 'UNAUTHENTICATED', request),
+  http.post('/api/v1/auth/refresh', async ({ request }) =>
+    signedIn ? ok({ accessToken: ACCESS_TOKEN }) : fail(401, 'UNAUTHENTICATED', request),
   ),
 
-  http.get('/api/auth/me', async ({ request }) => {
+  http.get('/api/v1/auth/me', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     const { password: _password, ...user } = users[0]
-    return HttpResponse.json(user)
+    return ok(user)
   }),
 
   // ---- browse ------------------------------------------------------------
-  http.get('/api/idols', async ({ request }) => {
+  http.get('/api/v1/idols', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(400)
@@ -86,37 +100,37 @@ export const handlers = [
     const result = query
       ? idols.filter((i) => i.name.toLowerCase().includes(query))
       : idols
-    return HttpResponse.json({ idols: result })
+    return ok({ idols: result })
   }),
 
-  http.get('/api/idols/:idolId/locations', async ({ request, params }) => {
+  http.get('/api/v1/idols/:idolId/locations', async ({ request, params }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(400)
     const ids = locationsByIdol[Number(params.idolId)] ?? []
-    return HttpResponse.json({
+    return ok({
       locations: locations.filter((l) => ids.includes(l.id)),
     })
   }),
 
-  http.get('/api/locations', async ({ request }) => {
+  http.get('/api/v1/locations', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(400)
-    return HttpResponse.json({ locations })
+    return ok({ locations })
   }),
 
-  http.get('/api/locations/:locationId', async ({ request, params }) => {
+  http.get('/api/v1/locations/:locationId', async ({ request, params }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(400)
     const location = locations.find((l) => l.id === Number(params.locationId))
     if (!location) return fail(404, 'NOT_FOUND', request)
-    return HttpResponse.json(location)
+    return ok(location)
   }),
 
   // ---- recommendation ----------------------------------------------------
-  http.post('/api/recommendations', async ({ request }) => {
+  http.post('/api/v1/recommendations', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
 
@@ -127,23 +141,23 @@ export const handlers = [
       case 'error':
         return fail(503, 'RECOMMENDATION_FAILED', request)
       case 'empty':
-        return HttpResponse.json({ courses: [] })
+        return ok({ courses: [] })
       default:
         // Only three seeded courses exist, so shuffle them: the same conditions
         // twice should not obviously return the same answer in the same order.
-        return HttpResponse.json({ courses: shuffle(courses) })
+        return ok({ courses: shuffle(courses) })
     }
   }),
 
   // ---- saved courses -----------------------------------------------------
-  http.get('/api/courses', async ({ request }) => {
+  http.get('/api/v1/courses', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(400)
-    return HttpResponse.json({ courses: savedCourses })
+    return ok({ courses: savedCourses })
   }),
 
-  http.post('/api/courses', async ({ request }) => {
+  http.post('/api/v1/courses', async ({ request }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     const body = (await request.json()) as { course: Course }
@@ -151,10 +165,10 @@ export const handlers = [
     if (!savedCourses.some((c) => c.id === body.course.id)) {
       savedCourses = [body.course, ...savedCourses]
     }
-    return HttpResponse.json(body.course)
+    return ok(body.course)
   }),
 
-  http.delete('/api/courses/:courseId', async ({ request, params }) => {
+  http.delete('/api/v1/courses/:courseId', async ({ request, params }) => {
     const unauthorised = requireAuth(request)
     if (unauthorised) return unauthorised
     await delay(300)

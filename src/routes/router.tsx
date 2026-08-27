@@ -1,5 +1,6 @@
 import { Navigate, createBrowserRouter } from 'react-router'
 
+import { AuthCallbackPage } from '@/routes/pages/AuthCallbackPage'
 import { AppShell } from '@/components/layout/AppShell'
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary'
 import { LocaleGate } from '@/components/layout/LocaleGate'
@@ -36,6 +37,8 @@ export const router = createBrowserRouter([
     children: [
       { path: '/onboarding', element: <OnboardingPage /> },
       { path: '/login', element: <LoginPage /> },
+      // Outside RequireAuth: the visitor is not signed in until this runs.
+      { path: '/auth/callback', element: <AuthCallbackPage /> },
       // Google sign-in creates the account on first pass — no signup screen.
       { path: '/signup', element: <Navigate to="/login" replace /> },
       {

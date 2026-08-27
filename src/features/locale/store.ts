@@ -18,18 +18,27 @@ const HTML_LANG: Record<Locale, string> = {
 }
 
 const KEY = 'idolog:locale'
+const VISIT_KEY = 'idolog:locale-asked'
 
 /**
- * Whether the language screen has been answered since the app was opened.
+ * Whether the language screen has been answered during this visit.
  *
- * Deliberately not persisted: the language screen is meant to greet every visit,
- * so this resets with the page. The chosen language itself still is persisted —
- * it decides which language the greeting is written in, and what 마이페이지 shows
- * as current.
+ * Held in `sessionStorage` rather than a module variable, because signing in
+ * with Google takes the tab away to Google and brings it back as a fresh
+ * document. A module variable would forget, and the gate would throw the
+ * language screen in front of a half-finished sign-in.
+ *
+ * Session-scoped, so a new tab is a new visit and gets asked again. The chosen
+ * language itself lives in `localStorage` — it decides which language the
+ * greeting is written in, and what 마이페이지 shows as current.
  */
-let chosenThisVisit = false
 export function hasChosenLocaleThisVisit(): boolean {
-  return chosenThisVisit
+  try {
+    return sessionStorage.getItem(VISIT_KEY) !== null
+  } catch {
+    // Private modes can throw on access. Asking again is the safe failure.
+    return false
+  }
 }
 
 function initialLocale(): Locale {
@@ -58,7 +67,11 @@ export const useLocaleStore = create<LocaleState>((set) => {
   return {
     locale,
     setLocale: (next) => {
-      chosenThisVisit = true
+      try {
+        sessionStorage.setItem(VISIT_KEY, '1')
+      } catch {
+        // Storage unavailable — the gate simply asks again next load.
+      }
       localStorage.setItem(KEY, next)
       document.documentElement.lang = HTML_LANG[next]
       set({ locale: next })
