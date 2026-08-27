@@ -64,15 +64,21 @@ export const handlers = [
 
   // ---- auth --------------------------------------------------------------
   /**
-   * Stands in for the whole Google round trip. The real endpoint bounces to
-   * Google and its callback returns to `/auth/callback` carrying only the
-   * refresh cookie; the mock skips Google and bounces straight back, so the
-   * app exercises the same navigation and the same cookie-for-token exchange.
+   * Stands in for the whole Google round trip. The real endpoint answers 302 to
+   * Google, and its callback returns to `/auth/callback` with the refresh
+   * cookie set; all the mock owes the app is that established session.
+   *
+   * 204 rather than the real 302 on purpose. A service worker answering a
+   * redirect is the exact thing that breaks here — the worker sits in front of
+   * navigations and its passthrough throws `TypeError: Failed to fetch`, the
+   * same defect the Kakao asset rule above works around. The caller moves to
+   * the callback route itself instead, and everything after that point — the
+   * cookie-for-token exchange — is the real flow unchanged.
    */
   http.get('/api/v1/auth/login/google', async () => {
     await delay(400)
     signedIn = true
-    return new HttpResponse(null, { status: 302, headers: { Location: '/auth/callback' } })
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.post('/api/v1/auth/logout', async () => {

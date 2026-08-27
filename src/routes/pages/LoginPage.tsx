@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 
 import { startGoogleLogin } from '@/api/endpoints'
 import { Button } from '@/components/ui/Button'
@@ -34,6 +34,7 @@ function GoogleMark() {
 
 export function LoginPage() {
   const t = useT()
+  const navigate = useNavigate()
   const [params] = useSearchParams()
   // Sign-in leaves the page for Google, so there is no request to track — only
   // the moment between the click and the browser giving up this document.
@@ -64,7 +65,9 @@ export function LoginPage() {
           icon={leaving ? undefined : <GoogleMark />}
           onClick={() => {
             setLeaving(true)
-            startGoogleLogin()
+            void startGoogleLogin(() =>
+              navigate('/auth/callback', { replace: true }),
+            ).catch(() => setLeaving(false))
           }}
         >
           {leaving ? t('login.pending') : t('login.google')}

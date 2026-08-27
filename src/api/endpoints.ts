@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+import { USE_MOCKS } from '@/app/env'
 import { BASE_URL, request } from './client'
 import {
   authTokensSchema,
@@ -30,8 +31,23 @@ import {
  */
 export const GOOGLE_LOGIN_URL = `${BASE_URL}/auth/login/google`
 
-export const startGoogleLogin = (): void => {
-  window.location.assign(GOOGLE_LOGIN_URL)
+/**
+ * `moveToCallback` is only used against the mock, which cannot be reached the
+ * real way: MSW's worker sits in front of top-level navigations and its
+ * passthrough throws `TypeError: Failed to fetch` on them — the same defect the
+ * Kakao asset rule at the top of `handlers.ts` works around. So the mock path
+ * calls the very same endpoint by fetch, which establishes the session exactly
+ * as the redirect would, and then moves to the callback route in-app. What
+ * happens after that — spending the cookie for a token — is identical either
+ * way, so the flow being exercised is still the real one.
+ */
+export async function startGoogleLogin(moveToCallback: () => void): Promise<void> {
+  if (!USE_MOCKS) {
+    window.location.assign(GOOGLE_LOGIN_URL)
+    return
+  }
+  await fetch(GOOGLE_LOGIN_URL, { credentials: 'include' })
+  moveToCallback()
 }
 
 export const logout = () => request('/auth/logout', z.unknown(), { method: 'POST' })
