@@ -18,12 +18,6 @@ COPY . .
 ARG VITE_KAKAO_MAP_KEY=""
 ENV VITE_KAKAO_MAP_KEY=$VITE_KAKAO_MAP_KEY
 
-# There is no backend yet, so the deployed app answers its own API from MSW.
-# Build with this off once the real API is up — the flag is what keeps the mock
-# data out of the bundle.
-ARG VITE_ENABLE_MOCKS="true"
-ENV VITE_ENABLE_MOCKS=$VITE_ENABLE_MOCKS
-
 RUN npm run build
 
 # ---------- serve ----------
@@ -39,4 +33,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 
 # Cloud Run overrides this; it is here so `docker run -p 8080:8080` works too.
 ENV PORT=8080
+# Railway backend service's public origin, for example
+# https://backend-production-xxxx.up.railway.app.  Railway overrides this.
+ENV BACKEND_URL=http://backend:3000
 EXPOSE 8080
