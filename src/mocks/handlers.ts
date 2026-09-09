@@ -117,12 +117,11 @@ const authHandlers = HAS_REAL_API ? [] : [
 ]
 
 /**
- * 카탈로그는 아직 백엔드에 /idols, /locations 가 없어 목이 계속 답합니다.
- * 그쪽이 구현되면 이 배열도 authHandlers 처럼 물러나게 하면 됩니다.
+ * 백엔드가 /idols 와 /locations 를 구현했으므로 카탈로그 목도 물러납니다.
+ * 남은 것은 어느 쪽에도 속하지 않는 카카오 자산 통과 규칙뿐이고, 그것은
+ * 실서버 여부와 무관하게 언제나 필요합니다.
  */
-const catalogueHandlers = [
-  ...passthroughHandlers,
-  ...authHandlers,
+const catalogueHandlers = HAS_REAL_API ? [] : [
 
   // ---- browse ------------------------------------------------------------
   http.get('/api/v1/idols', async ({ request }) => {
@@ -218,4 +217,9 @@ const courseHandlers = HAS_REAL_API ? [] : [
   }),
 ]
 
-export const handlers = [...catalogueHandlers, ...courseHandlers]
+export const handlers = [
+  ...passthroughHandlers,
+  ...authHandlers,
+  ...catalogueHandlers,
+  ...courseHandlers,
+]
