@@ -116,7 +116,11 @@ const authHandlers = HAS_REAL_API ? [] : [
 
 ]
 
-export const handlers = [
+/**
+ * 카탈로그는 아직 백엔드에 /idols, /locations 가 없어 목이 계속 답합니다.
+ * 그쪽이 구현되면 이 배열도 authHandlers 처럼 물러나게 하면 됩니다.
+ */
+const catalogueHandlers = [
   ...passthroughHandlers,
   ...authHandlers,
 
@@ -158,6 +162,14 @@ export const handlers = [
     return ok(location)
   }),
 
+]
+
+/**
+ * 추천과 저장 코스는 백엔드가 실제로 구현했으므로, 실서버가 붙어 있으면
+ * 물러납니다. 목이 남아 있으면 저장한 코스가 탭을 새로 고칠 때마다 사라져
+ * 백엔드가 저장을 못 하는 것처럼 보입니다.
+ */
+const courseHandlers = HAS_REAL_API ? [] : [
   // ---- recommendation ----------------------------------------------------
   http.post('/api/v1/recommendations', async ({ request }) => {
     const unauthorised = requireAuth(request)
@@ -205,3 +217,5 @@ export const handlers = [
     return new HttpResponse(null, { status: 204 })
   }),
 ]
+
+export const handlers = [...catalogueHandlers, ...courseHandlers]
