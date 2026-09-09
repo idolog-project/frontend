@@ -164,11 +164,13 @@ const catalogueHandlers = HAS_REAL_API ? [] : [
 ]
 
 /**
- * 추천과 저장 코스는 백엔드가 실제로 구현했으므로, 실서버가 붙어 있으면
- * 물러납니다. 목이 남아 있으면 저장한 코스가 탭을 새로 고칠 때마다 사라져
- * 백엔드가 저장을 못 하는 것처럼 보입니다.
+ * 추천은 백엔드에 아직 POST /recommendations 가 없어 실서버가 붙어 있어도
+ * 목이 계속 답합니다. 그래야 코스 화면이 빈 채로 남지 않습니다.
+ *
+ * 팀원의 추천 구현이 들어오면 이 배열도 다른 것들처럼 HAS_REAL_API 로
+ * 감싸면 됩니다.
  */
-const courseHandlers = HAS_REAL_API ? [] : [
+const recommendationHandlers = [
   // ---- recommendation ----------------------------------------------------
   http.post('/api/v1/recommendations', async ({ request }) => {
     const unauthorised = requireAuth(request)
@@ -189,6 +191,14 @@ const courseHandlers = HAS_REAL_API ? [] : [
     }
   }),
 
+]
+
+/**
+ * 저장 코스는 백엔드가 구현했으므로 실서버가 붙으면 물러납니다. 목이 남아
+ * 있으면 저장한 코스가 새로고침마다 사라져 백엔드가 저장을 못 하는 것처럼
+ * 보입니다.
+ */
+const courseHandlers = HAS_REAL_API ? [] : [
   // ---- saved courses -----------------------------------------------------
   http.get('/api/v1/courses', async ({ request }) => {
     const unauthorised = requireAuth(request)
@@ -221,5 +231,6 @@ export const handlers = [
   ...passthroughHandlers,
   ...authHandlers,
   ...catalogueHandlers,
+  ...recommendationHandlers,
   ...courseHandlers,
 ]
