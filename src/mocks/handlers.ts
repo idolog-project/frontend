@@ -1,5 +1,6 @@
 import { HttpResponse, delay, http, passthrough } from 'msw'
 
+import { HAS_REAL_API } from '@/app/env'
 import type { Course } from '@/api/schemas'
 import { courses, idols, locations, locationsByIdol, users } from './seed'
 import { currentScenario, recommendDelayMs } from './scenario'
@@ -37,8 +38,13 @@ const fail = (status: number, code: ServerErrorCode, request: Request) =>
     { status },
   )
 
+/**
+ * With a real backend in front, the session lives there and `signedIn` is never
+ * set — so the catalogue handlers must not gate on it, or every mocked endpoint
+ * would 401 for a properly signed-in user.
+ */
 const requireAuth = (request: Request) =>
-  signedIn ? null : fail(401, 'UNAUTHENTICATED', request)
+  HAS_REAL_API || signedIn ? null : fail(401, 'UNAUTHENTICATED', request)
 
 /** Fisher-Yates on a copy — the seed array must stay in its authored order. */
 function shuffle<T>(items: T[]): T[] {
@@ -50,7 +56,10 @@ function shuffle<T>(items: T[]): T[] {
   return out
 }
 
-export const handlers = [
+/**
+ * Kakao asset passthrough must stay first: MSW resolves handlers in order.
+ */
+const passthroughHandlers = [
   /**
    * Kakao Maps pulls its SDK, tiles and sprites from these hosts. MSW's worker
    * sits in front of every request the page makes, and its generic passthrough
@@ -61,6 +70,14 @@ export const handlers = [
    * Must stay at the top: MSW resolves handlers in order.
    */
   http.all(/^https:\/\/[^/]*\.(daumcdn\.net|kakao\.com)\//, () => passthrough()),
+]
+
+/**
+ * Auth handlers stand down as soon as a real backend is reachable — it has
+ * auth implemented, and a mock session would issue a token that backend
+ * rejects, which reads as a backend bug rather than a mock in the way.
+ */
+const authHandlers = HAS_REAL_API ? [] : [
 
   // ---- auth --------------------------------------------------------------
   /**
@@ -96,6 +113,12 @@ export const handlers = [
     const { password: _password, ...user } = users[0]
     return ok(user)
   }),
+
+]
+
+export const handlers = [
+  ...passthroughHandlers,
+  ...authHandlers,
 
   // ---- browse ------------------------------------------------------------
   http.get('/api/v1/idols', async ({ request }) => {
