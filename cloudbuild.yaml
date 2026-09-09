@@ -18,11 +18,6 @@ substitutions:
   _KAKAO_MAP_KEY: ''
   # 백엔드가 실제로 응답하는 날 'false'. 그러면 목 데이터가 번들에서 빠진다.
   _ENABLE_MOCKS: 'true'
-  # nginx 가 /api/ 를 넘길 백엔드의 공개 주소다. Dockerfile 기본값은 Railway 의
-  # 내부 이름 http://backend:3000 인데, Cloud Run 에는 그런 호스트가 없다. nginx
-  # 는 upstream 이름을 기동 시점에 풀지 못하면 통째로 죽으므로(host not found in
-  # upstream "backend"), 값이 비면 컨테이너가 8080 을 열지 못해 배포가 실패한다.
-  _BACKEND_URL: 'https://backend-production-7c0f.up.railway.app'
 
 steps:
   - id: Build
@@ -54,9 +49,6 @@ steps:
       - --platform=${_PLATFORM}
       - --image=${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${REPO_NAME}/${_SERVICE_NAME}:${COMMIT_SHA}
       - --region=${_DEPLOY_REGION}
-      # set- 이 아니라 update- 인 것은 의도한 것이다. set- 은 나머지 환경변수를
-      # 전부 지우므로, 콘솔에서 손으로 넣은 값이 배포 때마다 사라진다.
-      - --update-env-vars=BACKEND_URL=${_BACKEND_URL}
       - --quiet
 
 options:
