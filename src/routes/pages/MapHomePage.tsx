@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 import { useAllLocations, useIdols } from '@/api/queries'
 import { Map, type MapPoint } from '@/components/map/Map'
@@ -46,6 +46,7 @@ export function MapHomePage() {
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [listOpen, setListOpen] = useState(true)
   const listId = useId()
+  const scrollerId = useId()
 
   const idolsQuery = useIdols()
   const locationsQuery = useAllLocations()
@@ -148,9 +149,11 @@ export function MapHomePage() {
       {/* Sized, not positioned: the map component sets `position: relative`
           itself so its pins have a containing block, and Tailwind emits
           `.relative` after `.absolute`, so passing `absolute inset-0` here would
-          lose to it and collapse the map to zero height. */}
-      {/* Only here. The itinerary and detail maps are about one place each, and
-          a second dot on them would compete with the place they exist to show. */}
+          lose to it and collapse the map to zero height.
+
+          `showUserLocation` is set here and nowhere else: the itinerary and
+          detail maps are about one place each, and a second dot on them would
+          compete with the place they exist to show. */}
       <Map
         points={points}
         selectedId={focusedId}
@@ -245,8 +248,10 @@ export function MapHomePage() {
           map is the page — you have to be able to see where the pins are while
           you read what is at them. */}
       {/* Folds the panel away to see the map under it, and brings it back.
-          Desktop only: on a phone the strip already leaves most of the map
-          showing, and there is no sideways room to fold into.
+          This is the desktop shape — a tab on the panel's edge. A phone folds
+          the same list with the grabber inside the strip, below; the two share
+          one `listOpen`, so the list is either open or it is not, whichever way
+          you last said so and whichever size the window happens to be.
 
           The handle moves with the panel rather than sitting on it, so the
           button that opens the list is in the place the list just left. */}
@@ -281,18 +286,43 @@ export function MapHomePage() {
         aria-label={t('home.spotList')}
         className={cn(
           'absolute z-10 flex flex-col',
-          'bottom-0 left-0 right-0',
-          'md:bottom-screen md:left-screen md:right-auto md:top-24 md:w-[380px] md:overflow-hidden md:rounded-lg md:border md:border-border md:bg-background/85 md:backdrop-blur-md',
-          // Collapsed only from `md` up — the phone strip is unaffected.
+          // The bottom inset lives here, not on the scroller, so it still holds
+          // the grabber clear of the home indicator once the cards are folded.
+          'bottom-0 left-0 right-0 pb-screen',
+          'md:bottom-screen md:left-screen md:right-auto md:top-24 md:w-[380px] md:overflow-hidden md:rounded-lg md:border md:border-border md:bg-background/85 md:backdrop-blur-md md:pb-0',
+          // Folded, the phone keeps the grabber and drops the cards; the desktop
+          // panel goes entirely, because its tab is outside it.
           !listOpen && 'md:hidden',
         )}
       >
+        {/* Phone grabber. Folded, it reports what is behind it — the count is
+            the reason to pull the strip back up, so it is the better label. */}
+        <button
+          type="button"
+          onClick={() => setListOpen((open) => !open)}
+          aria-expanded={listOpen}
+          aria-controls={scrollerId}
+          aria-label={t(listOpen ? 'home.collapseList' : 'home.expandList')}
+          className="mx-auto mb-2 flex items-center gap-1.5 rounded-full border border-border bg-background/85 px-3.5 py-1.5 text-caption text-text-muted backdrop-blur-md transition-colors hover:text-text md:hidden"
+        >
+          {listOpen ? (
+            <ChevronDown size={14} strokeWidth={2} aria-hidden />
+          ) : (
+            <ChevronUp size={14} strokeWidth={2} aria-hidden />
+          )}
+          {listOpen
+            ? t('home.collapseList')
+            : t('home.spotCount', { count: locations.length })}
+        </button>
+
         <div
+          id={scrollerId}
           className={cn(
             // Snapped so a flick lands on a card rather than between two, and
             // contained so the same flick never drags the page behind it.
-            'snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-px-screen px-screen pb-screen pt-2',
+            'snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-px-screen px-screen pt-2',
             'md:snap-none md:overflow-x-visible md:overflow-y-auto md:px-4 md:pb-4 md:pt-4',
+            !listOpen && 'hidden md:block',
           )}
         >
           {locationsQuery.isPending && (
