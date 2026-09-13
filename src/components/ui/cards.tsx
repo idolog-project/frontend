@@ -68,7 +68,10 @@ export function SpotCard({
             {location.musicVideos.map((v) => v.title).join(', ')}
           </p>
         )}
-        <span className="mt-1 inline-flex w-max items-center gap-1 rounded-full border border-live/30 bg-live/10 px-2 py-1 font-display text-label-caps uppercase text-live">
+        {/* `max-w-full` bounds the `w-max` pill: the tracked caps label is the
+            one string here that cannot wrap on its own, and on a phone card a
+            longer translation would push past the card edge. */}
+        <span className="mt-1 inline-flex w-max max-w-full items-center gap-1 rounded-full border border-live/30 bg-live/10 px-2 py-1 font-display text-label-caps uppercase text-live">
           <Camera size={12} strokeWidth={1.5} aria-hidden />
           {t('detail.recreateBadge')}
         </span>

@@ -19,7 +19,7 @@ export function SavedCoursesPage() {
   const courses = query.data ?? []
 
   return (
-    <div className="flex flex-col gap-10 px-screen py-12">
+    <div className="flex flex-col gap-8 px-screen py-8 md:gap-10 md:py-12">
       <PageHeader
         eyebrow={t('saved.eyebrow')}
         title={
@@ -30,9 +30,9 @@ export function SavedCoursesPage() {
       />
 
       {query.isPending && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-5 md:gap-6">
           {Array.from({ length: 3 }, (_, i) => (
-            <Skeleton key={i} className="h-80" />
+            <Skeleton key={i} className="h-64 md:h-80" />
           ))}
         </div>
       )}
@@ -58,7 +58,11 @@ export function SavedCoursesPage() {
       )}
 
       {courses.length > 0 && (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+        <ul
+          // `min(100%,300px)` rather than a flat 300px: the track floor has to
+          // give way on a narrow phone, or the grid overflows the screen margin.
+          className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-5 md:gap-6"
+        >
           {courses.map((course) => (
             <li key={course.id}>
               <CourseCard

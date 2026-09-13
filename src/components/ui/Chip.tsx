@@ -14,7 +14,9 @@ export function Chip({ selected, icon, className, children, ...rest }: Props) {
       type="button"
       aria-pressed={selected}
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 rounded border px-4 py-1.5 text-caption transition-colors',
+        // Taller on a phone: at `py-1.5` a caption-sized chip is ~29px, well
+        // under the 44px a thumb needs. `md` restores the desktop padding.
+        'inline-flex shrink-0 items-center gap-1.5 rounded border px-4 py-2.5 text-caption transition-colors md:py-1.5',
         selected
           ? 'border-accent bg-accent/15 text-primary'
           : 'border-border bg-surface text-text-muted hover:border-border-strong hover:text-text',

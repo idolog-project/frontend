@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { Check, ChevronDown } from 'lucide-react'
 
 import { useAllLocations, useIdols } from '@/api/queries'
 import { Map, type MapPoint } from '@/components/map/Map'
 import { SpotCard } from '@/components/ui/cards'
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
+import { IdolSearch } from '@/features/idol/IdolSearch'
 import {
   UNFEATURED_PIN_COLOR,
   colorForLocation,
@@ -17,10 +17,25 @@ import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 
 /**
+ * One card in the phone's bottom strip. Wide enough to read, narrow enough that
+ * the next card peeks in and the strip reads as something that scrolls sideways.
+ * From `md` up the panel decides the width again, so the cap comes back off.
+ */
+const STRIP_CARD = 'w-[78vw] max-w-[320px] md:w-full md:max-w-none'
+
+/**
+ * A loading, error or empty state standing in for the cards. On a phone the
+ * strip has no ground of its own — the cards bring theirs — so anything that
+ * replaces them has to carry one or it sits unreadable on the map.
+ */
+const STRIP_STATE =
+  'rounded-lg border border-border bg-background/85 px-4 backdrop-blur-md md:rounded-none md:border-0 md:bg-transparent md:px-0 md:backdrop-blur-none'
+
+/**
  * Home. Every filming location in the catalogue is pinned on a map of Korea —
- * browsing the map is how you find where to go. The idol chip narrows the pins
- * rather than being the thing you must choose first, and each idol has its own
- * pin colour so a mixed map still reads.
+ * browsing the map is how you find where to go. Narrowing to one idol is a
+ * search box, not a first choice you must make, and the few idols that carry
+ * most of the map get their own pin colour so a mixed map still reads.
  *
  * The filter rides in the query string so back and refresh survive.
  */
@@ -28,7 +43,6 @@ export function MapHomePage() {
   const t = useT()
   const [params, setParams] = useSearchParams()
   const [focusedId, setFocusedId] = useState<string | null>(null)
-  const [biasOpen, setBiasOpen] = useState(false)
 
   const idolsQuery = useIdols()
   const locationsQuery = useAllLocations()
@@ -81,7 +95,6 @@ export function MapHomePage() {
   const chooseIdol = (id: number | null) => {
     setParams(id === null ? {} : { idol: String(id) }, { replace: true })
     setFocusedId(null)
-    setBiasOpen(false)
   }
 
   return (
@@ -97,79 +110,29 @@ export function MapHomePage() {
         className="h-full w-full"
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col gap-3 p-screen">
-        <div className="pointer-events-auto relative w-max">
-          <button
-            type="button"
-            aria-expanded={biasOpen}
-            onClick={() => setBiasOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-full border border-border bg-surface/90 px-3 py-1.5 backdrop-blur-md transition-colors hover:border-border-strong"
-          >
-            {selectedIdol ? (
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{
-                  background: colors.get(selectedIdol.id) ?? UNFEATURED_PIN_COLOR,
-                }}
-              />
-            ) : null}
-            <span className="font-display text-label-caps uppercase">
-              {selectedIdol?.name ?? t('home.filterAll')}
-            </span>
-            <span className="text-caption tabular-nums text-text-subtle">
-              {t('home.spotCount', { count: locations.length })}
-            </span>
-            <ChevronDown size={16} strokeWidth={1.5} aria-hidden />
-          </button>
-
-          {biasOpen && (
-            <ul className="absolute left-0 top-full z-30 mt-2 w-60 overflow-hidden rounded border border-border bg-surface">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => chooseIdol(null)}
-                  className={cn(
-                    'flex w-full items-center justify-between gap-3 border-b border-border px-4 py-3 text-left text-body-sm transition-colors hover:bg-surface-raised',
-                    !selectedIdol && 'text-primary',
-                  )}
-                >
-                  {t('home.filterAll')}
-                  {!selectedIdol && <Check size={14} strokeWidth={2} aria-hidden />}
-                </button>
-              </li>
-              {idols.map((idol) => (
-                <li key={idol.id}>
-                  <button
-                    type="button"
-                    onClick={() => chooseIdol(idol.id)}
-                    className={cn(
-                      'flex w-full items-center gap-3 px-4 py-3 text-left text-body-sm transition-colors hover:bg-surface-raised',
-                      idol.id === selectedIdol?.id && 'text-primary',
-                    )}
-                  >
-                    <span
-                      aria-hidden
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ background: colors.get(idol.id) ?? UNFEATURED_PIN_COLOR }}
-                    />
-                    <span className="flex-1 truncate">{idol.name}</span>
-                    <span className="text-caption tabular-nums text-text-subtle">
-                      {t('home.spotCount', { count: idol.locationCount })}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      {/* Search sits top right, clear of the card panel on the left. A phone has
+          nothing to keep clear of up there, so it spans the width instead. */}
+      <div className="pointer-events-none absolute left-screen right-screen top-screen z-20 flex justify-end md:left-auto">
+        <IdolSearch
+          idols={idols}
+          selectedIdol={selectedIdol}
+          colors={colors}
+          spotCount={locations.length}
+          onSelect={chooseIdol}
+        />
       </div>
 
       {/* Pin colour legend, and the quickest way to filter.
           It stays put while a filter is active: it is how you switch idols or
-          get back to all of them without reopening the dropdown. */}
+          get back to all of them without reopening the dropdown.
+
+          Desktop only. A third floating panel is what buries a phone's map, and
+          it is the one of the three that duplicates something else: opening the
+          search with nothing typed lists the same idols, in the same order,
+          behind the same colour dots — so the key survives, only the shortcut
+          costs a tap. */}
       {legendIdols.length > 0 && (
-        <div className="absolute bottom-screen right-screen z-20 w-52 rounded border border-border bg-background/85 px-3 py-2.5 backdrop-blur-md">
+        <div className="absolute bottom-screen right-screen z-20 hidden w-52 rounded border border-border bg-background/85 px-3 py-2.5 backdrop-blur-md md:block">
           <p className="mb-2 font-display text-label-caps uppercase text-text-subtle">
             {t('home.popularIdols')}
           </p>
@@ -222,33 +185,61 @@ export function MapHomePage() {
         </div>
       )}
 
-      {/* Fixed-height panel over the map. The cards must keep their natural
-          height and let the panel scroll — as flex children they would otherwise
-          be squashed to fit and the scrollbar would never appear. */}
-      <aside className="absolute bottom-screen left-screen top-24 z-10 flex w-[380px] flex-col overflow-hidden rounded-lg border border-border bg-background/85 backdrop-blur-md">
-        <div className="overflow-y-auto p-4">
+      {/* The same cards in the two shapes the screen allows.
+
+          Desktop: a fixed-height panel over the map. The cards must keep their
+          natural height and let the panel scroll — as flex children they would
+          otherwise be squashed to fit and the scrollbar would never appear.
+
+          Phone: a strip along the bottom edge that scrolls sideways, with no
+          panel behind it. A column here would be a full-screen sheet, and the
+          map is the page — you have to be able to see where the pins are while
+          you read what is at them. */}
+      <aside
+        // Named because on a phone this is a sideways strip over a map: without
+        // a label a screen reader meets a bare run of links with no clue that
+        // they are the pins it just described.
+        aria-label={t('home.spotList')}
+        className={cn(
+          'absolute z-10 flex flex-col',
+          'bottom-0 left-0 right-0',
+          'md:bottom-screen md:left-screen md:right-auto md:top-24 md:w-[380px] md:overflow-hidden md:rounded-lg md:border md:border-border md:bg-background/85 md:backdrop-blur-md',
+        )}
+      >
+        <div
+          className={cn(
+            // Snapped so a flick lands on a card rather than between two, and
+            // contained so the same flick never drags the page behind it.
+            'snap-x snap-mandatory overflow-x-auto overscroll-x-contain scroll-px-screen px-screen pb-screen pt-2',
+            'md:snap-none md:overflow-x-visible md:overflow-y-auto md:px-4 md:pb-4 md:pt-4',
+          )}
+        >
           {locationsQuery.isPending && (
-            <div className="flex flex-col gap-4">
-              <Skeleton className="h-56 w-full shrink-0" />
-              <Skeleton className="h-56 w-full shrink-0" />
+            <div className="flex gap-3 md:flex-col md:gap-4">
+              <Skeleton className={cn(STRIP_CARD, 'h-40 shrink-0 md:h-56')} />
+              <Skeleton className={cn(STRIP_CARD, 'h-40 shrink-0 md:h-56')} />
             </div>
           )}
 
           {locationsQuery.isError && (
-            <ErrorState
-              title={t('home.loadFailed')}
-              body={messageFor(locationsQuery.error, t('state.genericRetry'))}
-              onRetry={() => locationsQuery.refetch()}
-            />
+            <div className={STRIP_STATE}>
+              <ErrorState
+                title={t('home.loadFailed')}
+                body={messageFor(locationsQuery.error, t('state.genericRetry'))}
+                onRetry={() => locationsQuery.refetch()}
+              />
+            </div>
           )}
 
           {locationsQuery.isSuccess && locations.length === 0 && (
-            <EmptyState title={t('home.empty')} body={t('home.emptyBody')} />
+            <div className={STRIP_STATE}>
+              <EmptyState title={t('home.empty')} body={t('home.emptyBody')} />
+            </div>
           )}
 
-          <ul className="flex flex-col gap-4">
+          <ul className="flex gap-3 md:flex-col md:gap-4">
             {locations.map((location) => (
-              <li key={location.id} className="shrink-0">
+              <li key={location.id} className={cn(STRIP_CARD, 'shrink-0 snap-start')}>
                 <SpotCard
                   location={location}
                   accentColor={colorForLocation(location, colors) ?? UNFEATURED_PIN_COLOR}

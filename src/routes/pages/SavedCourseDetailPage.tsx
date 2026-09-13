@@ -12,7 +12,8 @@ import { CourseResult } from '@/features/recommend/CourseResult'
 
 /**
  * A saved course opened from the list — the same itinerary-beside-map spread as
- * the recommendation result, with delete in place of save.
+ * the recommendation result (stacked, with the map on demand, on a phone), with
+ * delete in place of save.
  */
 export function SavedCourseDetailPage() {
   const t = useT()
@@ -25,9 +26,9 @@ export function SavedCourseDetailPage() {
 
   if (query.isPending) {
     return (
-      <div className="flex flex-col gap-4 px-screen py-12">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-96 w-full" />
+      <div className="flex flex-col gap-4 px-screen py-8 md:py-12">
+        <Skeleton className="h-8 w-full max-w-48" />
+        <Skeleton className="h-64 w-full md:h-96" />
       </div>
     )
   }

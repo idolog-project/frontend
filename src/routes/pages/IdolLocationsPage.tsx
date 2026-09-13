@@ -8,6 +8,15 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
 import { useT } from '@/features/locale/useT'
 
+/**
+ * Card grid, shared by the skeleton so the placeholders land where the cards will.
+ *
+ * `auto-fill` already collapses to one column on a phone — 280px is the widest
+ * track, and 375px less the screen margins still clears it — so this needs no
+ * breakpoint of its own.
+ */
+const CARD_GRID = 'grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6'
+
 /** All filming locations for one idol, as a grid. */
 export function IdolLocationsPage() {
   const t = useT()
@@ -19,8 +28,10 @@ export function IdolLocationsPage() {
   const locationsQuery = useIdolLocations(Number.isFinite(id) ? id : undefined)
   const locations = locationsQuery.data ?? []
 
+  // Tighter top padding on a phone: the page opens straight onto its own title
+  // there, with no sidebar beside it to balance the desktop's 48px of air.
   return (
-    <div className="flex flex-col gap-10 px-screen py-12">
+    <div className="flex flex-col gap-10 px-screen py-8 md:py-12">
       <PageHeader
         eyebrow={t('locations.eyebrow')}
         title={
@@ -33,7 +44,7 @@ export function IdolLocationsPage() {
       </PageHeader>
 
       {locationsQuery.isPending && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+        <div className={CARD_GRID}>
           {Array.from({ length: 6 }, (_, i) => (
             <Skeleton key={i} className="h-64" />
           ))}
@@ -61,7 +72,7 @@ export function IdolLocationsPage() {
       )}
 
       {locations.length > 0 && (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-6">
+        <ul className={CARD_GRID}>
           {locations.map((location) => (
             <li key={location.id}>
               <SpotCard location={location} />

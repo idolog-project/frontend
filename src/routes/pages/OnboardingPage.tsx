@@ -26,7 +26,12 @@ export function OnboardingPage() {
       <img src={SCENE.onboarding} alt="" className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-8 p-16">
+      {/* The 64px inset is a desktop luxury — on a 375px phone it would eat a
+          third of the width and leave the headline setting two words a line, so
+          the phone falls back to the screen margin. `max-h-full` keeps the block
+          scrollable instead of clipped under the fold on a short landscape
+          viewport, where the parent's `overflow-hidden` would cut it off. */}
+      <div className="absolute inset-x-0 bottom-0 flex max-h-full flex-col gap-6 overflow-y-auto p-screen pb-10 md:gap-8 md:p-16">
         <div className="flex flex-col gap-4">
           <span className="w-max bg-gradient-to-r from-accent to-accent-end bg-clip-text font-display text-title-md text-transparent">
             Idolog
@@ -37,8 +42,11 @@ export function OnboardingPage() {
         </div>
 
         {/* Each option is written in its own script, so it reads for someone who
-            cannot yet read the current language. */}
-        <div className="flex w-full max-w-xs flex-col gap-4">
+            cannot yet read the current language. The column is capped on desktop
+            so the buttons don't run the width of the frame; a phone is already
+            that narrow, and a 320px cap there would only leave one edge hanging
+            short of the margin. */}
+        <div className="flex w-full flex-col gap-4 md:max-w-xs">
           {LOCALES.map((locale) => (
             <Button
               key={locale}

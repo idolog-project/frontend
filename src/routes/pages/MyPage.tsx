@@ -20,7 +20,11 @@ export function MyPage() {
         eyebrow={t('my.eyebrow')}
         title={user?.nickname ?? t('my.fallbackName')}
       >
-        {user && <p className="text-body-md text-text-muted">{user.email}</p>}
+        {/* `break-words`: an address has no space to wrap at, so a long one
+            would run past the right edge of a phone. */}
+        {user && (
+          <p className="break-words text-body-md text-text-muted">{user.email}</p>
+        )}
       </PageHeader>
 
       <section className="flex flex-col gap-4">

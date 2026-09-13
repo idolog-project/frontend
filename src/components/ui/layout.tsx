@@ -17,7 +17,13 @@ export function PageHeader({
   return (
     <header className="flex flex-col gap-3">
       <Eyebrow>{eyebrow}</Eyebrow>
-      <h1 className="font-display text-display-md text-balance">{title}</h1>
+      {/* The type scale has no step between 24px and 34px, and 34px turns a
+          two-word heading into three lines on a 375px phone. So the phone size
+          is set literally while leading and weight stay the token's — both of
+          which `text-display-md` restores identically from `md` up. */}
+      <h1 className="font-display text-[28px] font-bold leading-[1.1] text-balance md:text-display-md">
+        {title}
+      </h1>
       {children}
     </header>
   )
@@ -36,7 +42,10 @@ export function SectionHeader({
   return (
     <div
       className={cn(
-        'flex items-end justify-between gap-4',
+        // Stacked on a phone: side by side, a 24px title and its meta each get
+        // half of 375px and both wrap to two ragged lines. From `md` up the
+        // original single baseline-aligned row returns.
+        'flex flex-col items-start gap-1 md:flex-row md:items-end md:justify-between md:gap-4',
         rule && 'border-b border-border pb-2',
       )}
     >
@@ -123,8 +132,14 @@ export function StickyBar({ children }: { children: ReactNode }) {
   return (
     <div className="sticky bottom-0 z-20 -mx-screen border-t border-border bg-background/85 px-screen py-4 backdrop-blur-md">
       {/* The action must never shrink or wrap inside its pill — callers put the
-          flexible content first and the button last. */}
-      <div className="flex items-center justify-between gap-4 [&>:last-child]:shrink-0 [&>:last-child]:whitespace-nowrap">
+          flexible content first and the button last.
+          On a phone the two stack instead: a ~150px pill beside a summary or a
+          warning leaves the text folding into three lines, so the action takes
+          its own full-width row underneath. `whitespace-nowrap` is held to `md`
+          too — stacked, the label has the whole width and nothing to gain from
+          it, while a long translation would otherwise push the pill wider than
+          the screen. */}
+      <div className="flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-between md:gap-4 [&>:last-child]:shrink-0 md:[&>:last-child]:whitespace-nowrap">
         {children}
       </div>
     </div>

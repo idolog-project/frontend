@@ -1,5 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
-import { ExternalLink, Navigation } from 'lucide-react'
+import { useMemo, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { ExternalLink, Map as MapIcon, Navigation } from 'lucide-react'
 
 import type { Course } from '@/api/schemas'
 import { Map, type MapPoint } from '@/components/map/Map'
@@ -9,11 +9,27 @@ import { cn } from '@/lib/cn'
 import { directionsUrl } from '@/lib/kakaoLinks'
 import { useFormat } from '@/lib/useFormat'
 
+/** Mirrors Tailwind's `md:`, the width where the spread splits in two. */
+const DESKTOP = '(min-width: 768px)'
+
+// Stable identities so the subscription is not torn down on every render.
+const watchDesktop = (onChange: () => void) => {
+  const query = window.matchMedia(DESKTOP)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+const isDesktopNow = () => window.matchMedia(DESKTOP).matches
+
 /**
  * The itinerary-beside-map spread. Courses compared by tab when there are
  * several (the recommendation result); the tab strip disappears for a single
  * course (a saved course opened from the list). The sticky footer action is
  * injected — save on the result screen, delete on the saved detail.
+ *
+ * A phone cannot hold both halves side by side, and the itinerary is what the
+ * screen is for, so it takes the whole width and the map becomes an on-demand
+ * panel docked under it — opened from the footer bar, where the switch stays
+ * within reach however far down the list the reader has scrolled.
  */
 export function CourseResult({
   courses,
@@ -26,6 +42,8 @@ export function CourseResult({
   const format = useFormat()
   const [activeId, setActiveId] = useState(courses[0].id)
   const [focusedPlace, setFocusedPlace] = useState<string | null>(null)
+  const [mapOpen, setMapOpen] = useState(false)
+  const isDesktop = useSyncExternalStore(watchDesktop, isDesktopNow)
 
   const active = courses.find((c) => c.id === activeId) ?? courses[0]
 
@@ -55,13 +73,15 @@ export function CourseResult({
   ].filter(Boolean) as string[]
 
   return (
-    <div className="flex h-full">
-      <section className="flex w-[45%] min-w-0 flex-col overflow-y-auto">
+    <div className="flex h-full flex-col md:flex-row">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto md:w-[45%] md:flex-none">
         {courses.length > 1 && (
         <div
           role="tablist"
           aria-label={t('result.reason')}
-          className="flex gap-1 overflow-x-auto border-b border-border px-screen"
+          // Phone: pinned to the top of the column, so switching courses does
+          // not mean scrolling the whole itinerary back up first.
+          className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background px-screen md:static md:bg-transparent"
         >
           {courses.map((course) => (
             <button
@@ -96,7 +116,7 @@ export function CourseResult({
                 'aria-labelledby': `course-tab-${active.id}`,
               }
             : {})}
-          className="flex flex-col gap-8 px-screen py-8"
+          className="flex flex-col gap-6 px-screen py-6 md:gap-8 md:py-8"
         >
           <header className="flex flex-col gap-3">
             <h1 className="font-display text-display-md text-balance">{active.title}</h1>
@@ -113,7 +133,7 @@ export function CourseResult({
             </ul>
           </header>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-5">
+          <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-4 md:p-5">
             <Eyebrow>{t('result.reason')}</Eyebrow>
             <p className="text-body-md leading-relaxed text-text-muted">
               {active.reason}
@@ -140,7 +160,10 @@ export function CourseResult({
 
                   <div
                     className={cn(
-                      'flex items-start gap-4 rounded-lg border p-3 transition-colors',
+                      // Phone: the links drop under the stop instead of taking
+                      // a column of their own — beside the text they left it
+                      // about ninety pixels to wrap a name and an address in.
+                      'flex flex-col gap-2 rounded-lg border p-3 transition-colors md:flex-row md:items-start md:gap-4',
                       focusedPlace === pointId
                         ? 'border-accent bg-surface'
                         : 'border-transparent hover:bg-surface',
@@ -149,7 +172,7 @@ export function CourseResult({
                     <button
                       type="button"
                       onClick={() => setFocusedPlace(pointId)}
-                      className="flex min-w-0 flex-1 items-start gap-4 text-left"
+                      className="flex min-w-0 flex-1 items-start gap-3 text-left md:gap-4"
                     >
                       <span
                         className={cn(
@@ -163,7 +186,7 @@ export function CourseResult({
                       </span>
 
                       {place.imageUrl && (
-                        <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded">
+                        <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded md:h-16 md:w-16">
                           <img
                             src={place.imageUrl}
                             alt=""
@@ -179,7 +202,9 @@ export function CourseResult({
                       )}
 
                       <span className="flex min-w-0 flex-col gap-1">
-                        <span className="flex items-baseline gap-2">
+                        {/* Wraps rather than pushing: a long stop name has to
+                            break under the arrival time, not past the card. */}
+                        <span className="flex flex-wrap items-baseline gap-x-2">
                           {place.arrivalTime && (
                             <time className="text-caption tabular-nums text-primary">
                               {place.arrivalTime}
@@ -198,7 +223,9 @@ export function CourseResult({
                       </span>
                     </button>
 
-                    <span className="mt-1 flex shrink-0 flex-col items-end gap-1">
+                    {/* Phone: a row indented to the text column (badge + gap),
+                        so the links read as part of the stop above them. */}
+                    <span className="flex shrink-0 flex-row flex-wrap items-center gap-2 pl-10 md:mt-1 md:flex-col md:flex-nowrap md:items-end md:gap-1 md:pl-0">
                       {/* Leaves the app for Kakao's own directions — no SDK needed. */}
                       <a
                         href={directionsUrl(place)}
@@ -230,18 +257,32 @@ export function CourseResult({
           <p className="text-caption text-text-subtle">{t('result.source')}</p>
         </div>
 
-        <div className="sticky bottom-0 border-t border-border bg-background/85 px-screen py-4 backdrop-blur-md">
+        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/85 px-screen py-3 backdrop-blur-md md:block md:py-4">
+          <button
+            type="button"
+            aria-expanded={mapOpen}
+            onClick={() => setMapOpen((open) => !open)}
+            className="flex items-center justify-center gap-1.5 rounded border border-border py-2 text-body-sm text-text-muted transition-colors hover:border-primary hover:text-primary md:hidden"
+          >
+            <MapIcon size={16} strokeWidth={1.5} aria-hidden />
+            {mapOpen ? t('map.close') : t('locations.toMap')}
+          </button>
           {footer(active)}
         </div>
       </section>
 
-      <Map
-        points={points}
-        selectedId={focusedPlace}
-        onSelect={setFocusedPlace}
-        showRoute
-        className="flex-1 border-l border-border"
-      />
+      {/* Mounted rather than hidden when the phone panel is shut: the Kakao map
+          measures its container once, at creation, so one built inside a
+          collapsed panel would come back blank when it opened. */}
+      {(isDesktop || mapOpen) && (
+        <Map
+          points={points}
+          selectedId={focusedPlace}
+          onSelect={setFocusedPlace}
+          showRoute
+          className="h-64 shrink-0 border-t border-border md:h-auto md:flex-1 md:border-l md:border-t-0"
+        />
+      )}
     </div>
   )
 }

@@ -23,8 +23,23 @@ export function AuthLayout({
         </span>
       </div>
 
-      <div className="flex flex-1 items-center overflow-y-auto px-screen py-16">
-        <div className="mx-auto flex w-full max-w-sm flex-col gap-8">{children}</div>
+      {/* `my-auto` on the panel rather than `items-center` on the scroller: a
+          centred flex item that outgrows its scroll container has its overflow
+          cut off at the top and unreachable, which is exactly what a phone in
+          landscape (or with large text) does to this panel. Auto margins centre
+          the same way but yield to the scroll. */}
+      <div className="flex flex-1 overflow-y-auto px-screen py-12 md:py-16">
+        <div className="mx-auto my-auto flex w-full max-w-sm flex-col gap-8">
+          {/* The wordmark lives in the photo panel, which is hidden below `lg`,
+              so a phone sign-in would carry no brand at all. Shown below `md`
+              only, which leaves every desktop width exactly as it was. */}
+          <span
+            className="w-max bg-gradient-to-r from-accent to-accent-end bg-clip-text font-display text-title-md text-transparent md:hidden"
+          >
+            Idolog
+          </span>
+          {children}
+        </div>
       </div>
     </div>
   )

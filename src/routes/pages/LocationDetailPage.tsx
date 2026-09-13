@@ -11,8 +11,23 @@ import { GalleryStrip, Hero, ViewfinderFrame } from '@/components/ui/media'
 import { ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
 import { useT } from '@/features/locale/useT'
+import { cn } from '@/lib/cn'
 import { useFormat } from '@/lib/useFormat'
 import { SCENE } from '@/mocks/images'
+
+/**
+ * Hero height, shared by the skeleton so the two cannot drift.
+ *
+ * 420px is over half of a 667px phone, so the photo is cut down there. How far
+ * it can be cut is set by `ViewfinderFrame`, which centres a box inside the
+ * hero — cut too far and that box rides up into the back button sitting at
+ * `top-screen`. At 288px the frame's 144px box starts at 72px and the button
+ * ends at 60px, so they clear each other by 12px.
+ *
+ * This mirrors `Hero`'s own default rather than overriding it; the value is
+ * repeated here only because the skeleton needs the same class string.
+ */
+const HERO_HEIGHT = 'h-72 md:h-[420px]'
 
 /**
  * The one screen the draft covered end to end. "재현 가이드" and the gallery were
@@ -30,10 +45,13 @@ export function LocationDetailPage() {
   if (query.isPending) {
     return (
       <div className="flex flex-col gap-6">
-        <Skeleton className="h-[420px] w-full" />
+        {/* Mirrors the loaded hero's height at both sizes, so the page does not
+            jump when the query resolves. */}
+        <Skeleton className={cn('w-full', HERO_HEIGHT)} />
         <div className="flex flex-col gap-4 px-screen">
-          <Skeleton className="h-10 w-96" />
-          <Skeleton className="h-4 w-64" />
+          {/* Capped rather than fixed: a 384px bar overflows a 375px phone. */}
+          <Skeleton className="h-10 w-full max-w-96" />
+          <Skeleton className="h-4 w-full max-w-64" />
         </div>
       </div>
     )
@@ -65,6 +83,7 @@ export function LocationDetailPage() {
       <Hero
         imageUrl={location.imageUrl}
         alt={t('detail.heroAlt', { name: location.name })}
+        height={HERO_HEIGHT}
       >
         <button
           type="button"
