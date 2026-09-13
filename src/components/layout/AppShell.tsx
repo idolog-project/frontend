@@ -3,6 +3,7 @@ import { CircleUser, Compass, Route } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import type { MessageKey } from '@/features/locale/messages'
+import { LOCALES, LOCALE_LABEL, useLocaleStore } from '@/features/locale/store'
 import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 
@@ -37,6 +38,8 @@ const NAV: Array<{ to: string; label: MessageKey; icon: LucideIcon; end?: boolea
 
 export function AppShell() {
   const t = useT()
+  const locale = useLocaleStore((state) => state.locale)
+  const setLocale = useLocaleStore((state) => state.setLocale)
 
   return (
     <div className="flex h-full flex-col md:flex-row">
@@ -87,6 +90,41 @@ export function AppShell() {
             </li>
           ))}
         </ul>
+
+        {/* Sidebar only. The bottom bar has room for three destinations and
+            nothing else, and a phone still reaches this from 마이페이지 — the
+            same control, on a screen that has space to explain it.
+
+            `mt-auto` drops it to the foot of the rail: it is a setting, not a
+            fourth place to go, so it must not read as part of the list above. */}
+        <div className="mt-auto hidden flex-col gap-2 md:flex">
+          <span className="px-3 font-display text-label-caps uppercase text-text-subtle">
+            {t('my.language')}
+          </span>
+          <ul className="flex flex-col gap-0.5">
+            {LOCALES.map((option) => (
+              <li key={option}>
+                <button
+                  type="button"
+                  // Each label is written in its own script, so the browser has
+                  // to be told which — otherwise 简体中文 renders in whatever
+                  // font the active locale happens to ask for.
+                  lang={option === 'zh' ? 'zh-Hans' : option}
+                  aria-pressed={locale === option}
+                  onClick={() => setLocale(option)}
+                  className={cn(
+                    'w-full rounded px-3 py-1.5 text-left text-body-sm transition-colors',
+                    locale === option
+                      ? 'bg-surface text-primary'
+                      : 'text-text-muted hover:bg-surface hover:text-text',
+                  )}
+                >
+                  {LOCALE_LABEL[option]}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
 
       <main className="min-w-0 flex-1 overflow-y-auto">
