@@ -24,7 +24,6 @@ export function SpotCard({
 }) {
   const t = useT()
   const format = useFormat()
-  const credit = location.musicVideos[0]
   const distance = format.distance(distanceMeters ?? null)
 
   return (
@@ -63,11 +62,6 @@ export function SpotCard({
         <h3 className="font-display text-body-md font-semibold leading-tight">
           {location.name}
         </h3>
-        {credit && (
-          <p className="text-caption text-text-muted">
-            {location.musicVideos.map((v) => v.title).join(', ')}
-          </p>
-        )}
         {/* `max-w-full` bounds the `w-max` pill: the tracked caps label is the
             one string here that cannot wrap on its own, and on a phone card a
             longer translation would push past the card edge. */}

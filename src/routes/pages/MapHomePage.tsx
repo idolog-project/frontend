@@ -71,9 +71,26 @@ export function MapHomePage() {
 
   const locations = useMemo(() => {
     const all = locationsQuery.data ?? []
-    if (!selectedIdol) return all
-    return all.filter((location) =>
-      location.musicVideos.some((mv) => mv.idolId === selectedIdol.id),
+    const visible = selectedIdol
+      ? all.filter((location) =>
+          location.musicVideos.some((mv) => mv.idolId === selectedIdol.id),
+        )
+      : all
+
+    /**
+     * Photographed places first.
+     *
+     * Only about a third of the catalogue has a picture yet, and a card without
+     * one is a dark rectangle with a name on it — put a run of those at the top
+     * and the panel reads as broken rather than unfinished. This does not hide
+     * anything: the rest follow, in the order they arrived.
+     *
+     * Sorting a copy, and only on this flag, keeps the original order inside
+     * each group — `toSorted` is stable, so two photographed places stay in the
+     * order the API sent them.
+     */
+    return visible.toSorted(
+      (a, b) => Number(Boolean(b.imageUrl)) - Number(Boolean(a.imageUrl)),
     )
   }, [locationsQuery.data, selectedIdol])
 
