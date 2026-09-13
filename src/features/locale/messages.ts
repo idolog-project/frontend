@@ -46,6 +46,8 @@ export const ko = {
   'home.searchNoMatch': '일치하는 가수가 없어요',
   'home.clearFilter': '필터 해제',
   'home.spotList': '촬영지 목록',
+  'home.collapseList': '목록 접기',
+  'home.expandList': '목록 펼치기',
 
   // The colon rides in the value: Chinese wants its own full-width one.
   'card.place': '장소:',
@@ -224,6 +226,8 @@ export const en: Record<MessageKey, string> = {
   'home.searchNoMatch': 'No matching idol',
   'home.clearFilter': 'Clear filter',
   'home.spotList': 'Filming locations',
+  'home.collapseList': 'Collapse the list',
+  'home.expandList': 'Show the list',
 
   'card.place': 'Place:',
   'card.artist': 'Artist:',
@@ -401,6 +405,8 @@ export const zh: Record<MessageKey, string> = {
   'home.searchNoMatch': '没有匹配的歌手',
   'home.clearFilter': '清除筛选',
   'home.spotList': '拍摄地列表',
+  'home.collapseList': '收起列表',
+  'home.expandList': '展开列表',
 
   'card.place': '地点：',
   'card.artist': '歌手：',

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 import { useAllLocations, useIdols } from '@/api/queries'
 import { Map, type MapPoint } from '@/components/map/Map'
@@ -43,6 +44,8 @@ export function MapHomePage() {
   const t = useT()
   const [params, setParams] = useSearchParams()
   const [focusedId, setFocusedId] = useState<string | null>(null)
+  const [listOpen, setListOpen] = useState(true)
+  const listId = useId()
 
   const idolsQuery = useIdols()
   const locationsQuery = useAllLocations()
@@ -241,7 +244,33 @@ export function MapHomePage() {
           panel behind it. A column here would be a full-screen sheet, and the
           map is the page — you have to be able to see where the pins are while
           you read what is at them. */}
+      {/* Folds the panel away to see the map under it, and brings it back.
+          Desktop only: on a phone the strip already leaves most of the map
+          showing, and there is no sideways room to fold into.
+
+          The handle moves with the panel rather than sitting on it, so the
+          button that opens the list is in the place the list just left. */}
+      <button
+        type="button"
+        onClick={() => setListOpen((open) => !open)}
+        aria-expanded={listOpen}
+        aria-controls={listId}
+        aria-label={t(listOpen ? 'home.collapseList' : 'home.expandList')}
+        className={cn(
+          'absolute top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-text-muted backdrop-blur-md transition-colors hover:border-border-strong hover:text-text md:flex',
+          // 20px margin + the panel's 380px, then a hair of daylight.
+          listOpen ? 'md:left-[408px]' : 'md:left-screen',
+        )}
+      >
+        {listOpen ? (
+          <PanelLeftClose size={18} strokeWidth={1.5} aria-hidden />
+        ) : (
+          <PanelLeftOpen size={18} strokeWidth={1.5} aria-hidden />
+        )}
+      </button>
+
       <aside
+        id={listId}
         // Named because on a phone this is a sideways strip over a map: without
         // a label a screen reader meets a bare run of links with no clue that
         // they are the pins it just described.
@@ -250,6 +279,8 @@ export function MapHomePage() {
           'absolute z-10 flex flex-col',
           'bottom-0 left-0 right-0',
           'md:bottom-screen md:left-screen md:right-auto md:top-24 md:w-[380px] md:overflow-hidden md:rounded-lg md:border md:border-border md:bg-background/85 md:backdrop-blur-md',
+          // Collapsed only from `md` up — the phone strip is unaffected.
+          !listOpen && 'md:hidden',
         )}
       >
         <div
