@@ -12,12 +12,9 @@ const RING = { selected: 2.5, default: 2 } as const
 const TAIL = { selected: 7, default: 5 } as const
 
 /**
- * Tinted veil over the photo, darkest at the foot of the disc.
- *
- * It was here to stop a bright shot fighting the dark inverted map. The tiles
- * are light now, so it earns its place differently: it is what a white order
- * number reads against, and it keeps a pale photo from dissolving into pale
- * land. Lighten it and the numbered pins on a course map lose their contrast.
+ * Tinted veil over the photo, darkest at the foot of the disc, so a bright shot
+ * never fights the dark map — and so a white order number has something to read
+ * against on the numbered pins of a course.
  */
 export const PIN_VEIL = 'linear-gradient(180deg, rgba(11,11,15,.05), rgba(11,11,15,.45))'
 export const PIN_SHADOW = 'drop-shadow(0 4px 8px rgba(0,0,0,.55))'
@@ -52,22 +49,25 @@ export function createUserDotElement(label: string): HTMLElement {
     // The halo is drawn with a shadow so it costs no extra element and never
     // affects the overlay's anchor point.
     `background:${USER_DOT_COLOR}`,
-    'border:2.5px solid #fff',
-    `box-shadow:0 0 0 4px ${USER_DOT_HALO}, 0 2px 6px rgba(0,0,0,.45)`,
+    // Dark ring, not white: the fill is white, so a white ring would vanish
+    // into it and leave a bare disc with nothing holding its edge.
+    `border:2.5px solid ${USER_DOT_RING}`,
+    `box-shadow:0 0 0 4px ${USER_DOT_HALO}, 0 2px 6px rgba(0,0,0,.55)`,
   ].join(';')
   return root
 }
 
 /**
- * Ink, not a palette colour.
+ * Plain white, not a palette colour.
  *
  * Every entry in `IDOL_PALETTE` is spoken for on this map — mint is an idol's
  * ring, not a spare — so tinting the dot would make the viewer's own position
- * look like one more idol's location. Near-black inside a white ring belongs to
- * nobody, and holds up on the light tiles the map now draws.
+ * look like one more idol's location. White inside a dark ring belongs to
+ * nobody, and is the one thing that stays legible on the dark tiles.
  */
-const USER_DOT_COLOR = '#0b0b0f'
-const USER_DOT_HALO = 'rgba(11,11,15,.22)'
+const USER_DOT_COLOR = '#f2f2f4'
+const USER_DOT_RING = '#0b0b0f'
+const USER_DOT_HALO = 'rgba(242,242,244,.28)'
 
 /** Builds the pin as an element, for Kakao's CustomOverlay. */
 export function createPinElement(

@@ -19,22 +19,21 @@ type Props = {
 }
 
 /**
- * Kakao ships no dark map style, so the tiles were inverted in CSS to sit in a
- * dark app, with every pin carrying the exact inverse to cancel it.
+ * Kakao ships no dark map style, so the tiles are inverted in CSS to sit in a
+ * dark app, and everything drawn on top carries the exact inverse to cancel it.
  *
- * That is off now. Inverting a drawn map does not darken it so much as turn it
- * inside out: white land goes black, the pale blue sea goes deep teal, park
- * green comes back as something closer to terrain. The result read as a
- * satellite photo rather than a map, which is the opposite of what a map of
- * places you might visit should look like.
+ * The cancelling is not optional. Applied twice, `invert(1) hue-rotate(180deg)`
+ * is the identity; any other pairing leaves the photo inside each pin
+ * colour-shifted. So whatever string sits here, the overlay wrappers must carry
+ * the same one — which is why this is a constant and not a literal.
  *
- * Kept as a constant rather than deleted because it is the whole mechanism —
- * put the filter back here and the pins re-cancel it on their own. Whatever
- * goes here, the pin wrapper must carry the same string: applied twice,
- * `invert(1) hue-rotate(180deg)` is the identity, and any other pairing would
- * leave the photo inside each pin colour-shifted.
+ * Turning it off is a one-line change, and the result is Kakao's own light map.
+ * Worth knowing before reaching for it: inverting a drawn map does not darken
+ * it so much as turn it inside out, so the dark version reads a little like
+ * terrain imagery. That was weighed and kept — a light map in a dark app is the
+ * louder problem.
  */
-const MAP_FILTER = 'none'
+const MAP_FILTER = 'invert(1) hue-rotate(180deg)'
 
 export function KakaoMap({
   points,
@@ -105,9 +104,16 @@ export function KakaoMap({
       ({ coords }) => {
         const map = mapRef.current
         if (cancelled || !map) return
+
+        // Same counter-filter the pins use. Without it the dot rides the tile
+        // inversion and comes out as its own negative.
+        const wrapper = document.createElement('div')
+        wrapper.style.cssText = `filter:${MAP_FILTER}`
+        wrapper.appendChild(createUserDotElement(t('map.myLocation')))
+
         overlay = new maps.CustomOverlay({
           position: new maps.LatLng(coords.latitude, coords.longitude),
-          content: createUserDotElement(t('map.myLocation')),
+          content: wrapper,
           // Under the pins: it says where you are, it is not somewhere to go.
           zIndex: 1,
           clickable: false,
