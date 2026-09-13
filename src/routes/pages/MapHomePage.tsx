@@ -69,6 +69,32 @@ export function MapHomePage() {
 
   const colors = useMemo(() => idolColors(legendIdols), [legendIdols])
 
+  /**
+   * A location carries only `idolId`s, and the cards want the names.
+   *
+   * A plain object rather than a `Map`: this module imports the map component
+   * under that name, so `new Map()` here would reach for the component and not
+   * the built-in.
+   */
+  const idolNameById = useMemo(
+    () =>
+      Object.fromEntries(idols.map((idol) => [idol.id, idol.name])) as Record<
+        number,
+        string
+      >,
+    [idols],
+  )
+
+  /** Deduplicated — one place can hold several videos by the same idol. */
+  const idolNamesFor = (location: (typeof locations)[number]) =>
+    [
+      ...new Set(
+        location.musicVideos
+          .map((mv) => idolNameById[mv.idolId])
+          .filter((name): name is string => Boolean(name)),
+      ),
+    ].join(', ')
+
   const locations = useMemo(() => {
     const all = locationsQuery.data ?? []
     const visible = selectedIdol
@@ -260,6 +286,7 @@ export function MapHomePage() {
                 <SpotCard
                   location={location}
                   accentColor={colorForLocation(location, colors) ?? UNFEATURED_PIN_COLOR}
+                  idolName={idolNamesFor(location)}
                   selected={focusedId === String(location.id)}
                   onFocus={() => setFocusedId(String(location.id))}
                 />

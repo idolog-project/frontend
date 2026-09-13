@@ -13,6 +13,7 @@ export function SpotCard({
   selected,
   distanceMeters,
   accentColor,
+  idolName,
   onFocus,
 }: {
   location: FilmingLocation
@@ -20,11 +21,26 @@ export function SpotCard({
   distanceMeters?: number | null
   /** Matches the location's pin colour so card and map read as the same thing. */
   accentColor?: string
+  /**
+   * Who the song belongs to. The caller resolves it because a location carries
+   * only `idolId`s, and whoever renders the card already holds the idol list.
+   */
+  idolName?: string
   onFocus?: () => void
 }) {
   const t = useT()
   const format = useFormat()
   const distance = format.distance(distanceMeters ?? null)
+
+  /**
+   * The song is the headline: you come here from a music video, not from a
+   * gazetteer. A place can appear in several, so they are listed together.
+   *
+   * A location with no video falls back to its own name — better a card headed
+   * by where it is than one headed by nothing. The place line is then dropped,
+   * since it would repeat the heading word for word.
+   */
+  const songTitle = location.musicVideos.map((video) => video.title).join(', ')
 
   return (
     <Link
@@ -59,9 +75,24 @@ export function SpotCard({
       </div>
 
       <div className="flex flex-col gap-1.5 p-4">
-        <h3 className="font-display text-body-md font-semibold leading-tight">
-          {location.name}
+        <h3 className="font-display text-title-md leading-tight">
+          {songTitle || location.name}
         </h3>
+
+        <dl className="flex flex-col gap-0.5 text-body-sm">
+          {songTitle && (
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 text-text-subtle">{t('card.place')}</dt>
+              <dd className="min-w-0 text-text-muted">{location.name}</dd>
+            </div>
+          )}
+          {idolName && (
+            <div className="flex gap-1.5">
+              <dt className="shrink-0 text-text-subtle">{t('card.artist')}</dt>
+              <dd className="min-w-0 text-text-muted">{idolName}</dd>
+            </div>
+          )}
+        </dl>
         {/* `max-w-full` bounds the `w-max` pill: the tracked caps label is the
             one string here that cannot wrap on its own, and on a phone card a
             longer translation would push past the card edge. */}

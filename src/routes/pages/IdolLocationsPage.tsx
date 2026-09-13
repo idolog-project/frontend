@@ -75,7 +75,7 @@ export function IdolLocationsPage() {
         <ul className={CARD_GRID}>
           {locations.map((location) => (
             <li key={location.id}>
-              <SpotCard location={location} />
+              <SpotCard location={location} idolName={idol?.name} />
             </li>
           ))}
         </ul>

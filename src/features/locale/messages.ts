@@ -47,6 +47,10 @@ export const ko = {
   'home.clearFilter': '필터 해제',
   'home.spotList': '촬영지 목록',
 
+  // The colon rides in the value: Chinese wants its own full-width one.
+  'card.place': '장소:',
+  'card.artist': '가수:',
+
   'map.detail': '자세히 보기',
   'map.close': '닫기',
 
@@ -219,6 +223,9 @@ export const en: Record<MessageKey, string> = {
   'home.clearFilter': 'Clear filter',
   'home.spotList': 'Filming locations',
 
+  'card.place': 'Place:',
+  'card.artist': 'Artist:',
+
   'map.detail': 'View details',
   'map.close': 'Close',
 
@@ -390,6 +397,9 @@ export const zh: Record<MessageKey, string> = {
   'home.searchNoMatch': '没有匹配的歌手',
   'home.clearFilter': '清除筛选',
   'home.spotList': '拍摄地列表',
+
+  'card.place': '地点：',
+  'card.artist': '歌手：',
 
   'map.detail': '查看详情',
   'map.close': '关闭',
