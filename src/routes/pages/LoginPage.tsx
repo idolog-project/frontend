@@ -5,7 +5,7 @@ import { startGoogleLogin } from '@/api/endpoints'
 import { Button } from '@/components/ui/Button'
 import { Eyebrow } from '@/components/ui/Chip'
 import { useT } from '@/features/locale/useT'
-import { SCENE } from '@/mocks/images'
+import { randomBackdrop } from '@/mocks/images'
 import { AuthLayout } from './AuthLayout'
 
 /** Google's mark, inlined so no external request is needed to render it. */
@@ -39,6 +39,14 @@ export function LoginPage() {
   // Sign-in leaves the page for Google, so there is no request to track — only
   // the moment between the click and the browser giving up this document.
   const [leaving, setLeaving] = useState(false)
+  /**
+   * A different frame each time this screen is reached.
+   *
+   * Held in state so it survives the re-render that `leaving` causes — picking
+   * while rendering would swap the photograph at the moment the button is
+   * pressed, which is the one moment nothing should move.
+   */
+  const [backdrop] = useState(randomBackdrop)
 
   // Set by the callback route when the round trip came back without a session.
   const failed = params.get('error') === 'oauth'
@@ -48,7 +56,7 @@ export function LoginPage() {
   // session starts from the map.
 
   return (
-    <AuthLayout imageUrl={SCENE.loginBackdrop}>
+    <AuthLayout imageUrl={backdrop}>
       <div className="flex flex-col gap-3">
         <Eyebrow>{t('login.eyebrow')}</Eyebrow>
         <h1 className="font-display text-display-md text-balance">

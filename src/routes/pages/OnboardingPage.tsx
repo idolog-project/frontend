@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { LOCALES, LOCALE_LABEL, useLocaleStore, type Locale } from '@/features/locale/store'
 import { useT } from '@/features/locale/useT'
-import { ONBOARDING_SCENES } from '@/mocks/images'
+import { randomBackdrop } from '@/mocks/images'
 
 /**
  * The one screen the system allows to be a single quiet moment: full-bleed
@@ -16,16 +16,10 @@ export function OnboardingPage() {
   const setLocale = useLocaleStore((s) => s.setLocale)
 
   /**
-   * A different frame each visit, chosen once.
-   *
-   * In state rather than computed while rendering: picking inline would deal a
-   * new photo on every re-render, so the background would flicker as the
-   * language store settles. The gate shows this screen once per visit, so once
-   * per mount is once per visit.
+   * A different frame each visit. The gate shows this screen once per visit, so
+   * once per mount is once per visit.
    */
-  const [backdrop] = useState(
-    () => ONBOARDING_SCENES[Math.floor(Math.random() * ONBOARDING_SCENES.length)],
-  )
+  const [backdrop] = useState(randomBackdrop)
 
   const choose = (locale: Locale) => {
     setLocale(locale)

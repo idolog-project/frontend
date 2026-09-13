@@ -45,15 +45,27 @@ export const SCENE = {
 } as const
 
 /**
- * Backgrounds the language screen picks one of, at random, per visit.
+ * The frames the full-bleed screens — the language pick and sign-in — draw from.
  *
  * Hand-picked rather than "every file in the folder". The seed set also holds
  * UI mock-ups lifted from the design tool — screenshots with panels and labels
- * baked in — and close-up portraits, and neither can sit behind a headline: one
- * shows a second interface inside the app, the other puts a stranger's face on
- * the first screen anyone sees.
+ * baked in, one of them a mock of this very language screen — and close-up
+ * portraits. Neither can sit behind a headline: one shows a second interface
+ * inside the app, the other puts a stranger's face on the first screen anyone
+ * sees. `SCENE.loginBackdrop` was one of the mock-ups.
  *
- * What is left is wide, dark and quiet, which is what the gradient over it
- * expects. A brighter frame would leave the white headline fighting the photo.
+ * What is left is wide, dark and quiet, which is what the gradients over these
+ * screens expect. A brighter frame leaves the white headline fighting the photo.
  */
-export const ONBOARDING_SCENES = [2, 4, 13, 18, 19, 21, 40, 41, 47, 51].map(seed)
+export const BACKDROP_SCENES = [2, 4, 13, 18, 19, 21, 40, 41, 47, 51].map(seed)
+
+/**
+ * One of them, at random.
+ *
+ * Call it as a `useState` initialiser, never while rendering: picking inline
+ * deals a new photo on every re-render, and the background flickers as the rest
+ * of the screen settles.
+ */
+export function randomBackdrop(): string {
+  return BACKDROP_SCENES[Math.floor(Math.random() * BACKDROP_SCENES.length)]
+}
