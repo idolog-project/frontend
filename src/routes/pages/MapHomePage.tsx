@@ -32,6 +32,25 @@ const STRIP_CARD = 'w-[78vw] max-w-[320px] md:w-full md:max-w-none'
 const STRIP_STATE =
   'rounded-lg border border-border bg-background/85 px-4 backdrop-blur-md md:rounded-none md:border-0 md:bg-transparent md:px-0 md:backdrop-blur-none'
 
+/** Mirrors Tailwind's `md:`, the width where the panel becomes a strip. */
+const DESKTOP = '(min-width: 768px)'
+
+/**
+ * Whether the list starts open.
+ *
+ * A phone opens on the map alone. The strip costs 40% of a small screen, and
+ * this page is a map of the whole country — the first thing to see is where the
+ * pins are, not the first two of a hundred and twenty cards. A desktop has room
+ * for both at once, so it keeps the list up.
+ *
+ * Only the starting value. Once anyone touches the handle, that answer stands
+ * at every width.
+ */
+const listOpensByDefault = () =>
+  typeof window === 'undefined' || !window.matchMedia
+    ? true
+    : window.matchMedia(DESKTOP).matches
+
 /**
  * Home. Every filming location in the catalogue is pinned on a map of Korea —
  * browsing the map is how you find where to go. Narrowing to one idol is a
@@ -44,7 +63,7 @@ export function MapHomePage() {
   const t = useT()
   const [params, setParams] = useSearchParams()
   const [focusedId, setFocusedId] = useState<string | null>(null)
-  const [listOpen, setListOpen] = useState(true)
+  const [listOpen, setListOpen] = useState(listOpensByDefault)
   const listId = useId()
   const scrollerId = useId()
 
