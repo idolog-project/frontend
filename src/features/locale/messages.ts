@@ -69,6 +69,7 @@ export const ko = {
   'detail.guide': '재현 가이드',
   'detail.guideBody':
     '원본과 같은 앵글은 피사체에서 15m쯤 물러나 광각(24-35mm)으로 잡을 때 나옵니다. 수평선이 구조물 뒤로 지나가도록 두고, 흐린 날을 고르면 색감까지 가까워집니다.',
+  'detail.watchMv': '{title} 뮤직비디오 보기',
   'detail.gallery': '갤러리',
   'detail.gallerySwipe': '옆으로 넘겨보세요',
   'detail.heroAlt': '{name} 전경',
@@ -245,6 +246,7 @@ export const en: Record<MessageKey, string> = {
   'detail.guide': 'How to recreate it',
   'detail.guideBody':
     'To match the original angle, stand about 15 metres back from your subject and shoot wide, 24-35mm. Keep the horizon running behind the structure, and pick an overcast day to get close to the original colour.',
+  'detail.watchMv': 'Watch the {title} music video',
   'detail.gallery': 'Gallery',
   'detail.gallerySwipe': 'Swipe to view',
   'detail.heroAlt': '{name}, wide view',
@@ -421,6 +423,7 @@ export const zh: Record<MessageKey, string> = {
   'detail.guide': '复刻指南',
   'detail.guideBody':
     '退到距离主体约 15 米，用 24-35mm 广角拍。让海平线从建筑物后方穿过，选阴天拍，颜色会更接近原片。',
+  'detail.watchMv': '观看《{title}》MV',
   'detail.gallery': '图集',
   'detail.gallerySwipe': '左右滑动查看',
   'detail.heroAlt': '{name} 全景',

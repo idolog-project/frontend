@@ -1,5 +1,6 @@
+import { Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { ArrowLeft, Bus, Camera, MapPin, Sunrise } from 'lucide-react'
+import { ArrowLeft, Bus, Camera, CirclePlay, MapPin, Sunrise } from 'lucide-react'
 
 import { useLocation as useLocationQuery } from '@/api/queries'
 import { Map } from '@/components/map/Map'
@@ -103,12 +104,32 @@ export function LocationDetailPage() {
             <h1 className="font-display text-display-lg text-balance">
               {location.name}
             </h1>
+            {/* The credit is the reason anyone is on this page, so the title
+                doubles as the way to the video rather than sitting next to a
+                separate "watch" button. Every seeded video has a link; a title
+                without one still renders, just as plain text. */}
             {credit && (
-              <p className="text-body-md text-text-muted">
-                <span className="text-text">
-                  {location.musicVideos.map((v) => v.title).join(', ')}
-                </span>
-                {releasedOn && ` · ${releasedOn}`}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-md text-text-muted">
+                {location.musicVideos.map((video, index) => (
+                  <Fragment key={video.id}>
+                    {index > 0 && <span aria-hidden>·</span>}
+                    {video.youtubeUrl ? (
+                      <a
+                        href={video.youtubeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={t('detail.watchMv', { title: video.title })}
+                        className="inline-flex items-center gap-1.5 text-text transition-colors hover:text-primary hover:underline"
+                      >
+                        {video.title}
+                        <CirclePlay size={16} strokeWidth={1.5} aria-hidden />
+                      </a>
+                    ) : (
+                      <span className="text-text">{video.title}</span>
+                    )}
+                  </Fragment>
+                ))}
+                {releasedOn && <span>· {releasedOn}</span>}
               </p>
             )}
             <div className="flex flex-wrap gap-2">
