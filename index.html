@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Paints the phone browser's own chrome to match the page. Without it the
+      address bar stays light above a near-black app, which reads as a rendering
+      fault rather than a theme. Matches `--color-background` in tokens.css.
+    -->
+    <meta name="theme-color" content="#0b0b0f" />
 
     <!--
       Hanken Grotesk / Plus Jakarta Sans are the faces named by the Stitch design
