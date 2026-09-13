@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 import { DEFAULT_PIN_COLOR, MapCanvas, type MapPoint } from './MapCanvas'
-import { createPinElement } from './pinElement'
+import { createPinElement, createUserDotElement } from './pinElement'
 import { loadKakaoMaps, type KakaoLatLng, type KakaoMaps } from './loadKakao'
 
 type Props = {
@@ -11,25 +11,37 @@ type Props = {
   selectedId?: string | null
   onSelect?: (id: string) => void
   showRoute?: boolean
+  /** Marks where the viewer is, if the browser will say and they allow it. */
+  showUserLocation?: boolean
   /** Called when a gesture should dismiss an open popup — see `Map`. */
   onClosePopup?: () => void
   className?: string
 }
 
 /**
- * Kakao ships no dark map style and the design system forbids a bright consumer
- * map, so the tile layer is inverted in CSS and each pin carries the exact
- * inverse. The two must cancel precisely — `invert(1) hue-rotate(180deg)` twice
- * is the identity — otherwise the photo inside every pin comes out colour-shifted.
- * Drop both if a real dark tile source ever appears.
+ * Kakao ships no dark map style, so the tiles were inverted in CSS to sit in a
+ * dark app, with every pin carrying the exact inverse to cancel it.
+ *
+ * That is off now. Inverting a drawn map does not darken it so much as turn it
+ * inside out: white land goes black, the pale blue sea goes deep teal, park
+ * green comes back as something closer to terrain. The result read as a
+ * satellite photo rather than a map, which is the opposite of what a map of
+ * places you might visit should look like.
+ *
+ * Kept as a constant rather than deleted because it is the whole mechanism —
+ * put the filter back here and the pins re-cancel it on their own. Whatever
+ * goes here, the pin wrapper must carry the same string: applied twice,
+ * `invert(1) hue-rotate(180deg)` is the identity, and any other pairing would
+ * leave the photo inside each pin colour-shifted.
  */
-const MAP_FILTER = 'invert(1) hue-rotate(180deg)'
+const MAP_FILTER = 'none'
 
 export function KakaoMap({
   points,
   selectedId,
   onSelect,
   showRoute,
+  showUserLocation,
   onClosePopup,
   className,
 }: Props) {
@@ -70,6 +82,48 @@ export function KakaoMap({
     })
   }, [maps])
 
+  /**
+   * Where the viewer is, once.
+   *
+   * Asked for rather than watched: the map opens on the whole country and the
+   * pins do not move, so a live feed would spend the battery to redraw a dot in
+   * the same place. It also does not recentre — the viewer came to browse every
+   * filming location, and yanking the map to wherever they happen to be would
+   * take that away before they had looked.
+   *
+   * Every failure is silent. Permission refused, no signal indoors, an older
+   * browser without the API — none of that is worth an error the viewer did not
+   * ask to see, and the map is fully usable without it.
+   */
+  useEffect(() => {
+    if (!maps || !showUserLocation || !navigator.geolocation) return
+
+    let overlay: { setMap(map: unknown): void } | null = null
+    let cancelled = false
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const map = mapRef.current
+        if (cancelled || !map) return
+        overlay = new maps.CustomOverlay({
+          position: new maps.LatLng(coords.latitude, coords.longitude),
+          content: createUserDotElement(t('map.myLocation')),
+          // Under the pins: it says where you are, it is not somewhere to go.
+          zIndex: 1,
+          clickable: false,
+        })
+        overlay.setMap(map)
+      },
+      () => {},
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
+    )
+
+    return () => {
+      cancelled = true
+      overlay?.setMap(null)
+    }
+  }, [maps, showUserLocation, t])
+
   // Rebuild pins only when the set of points changes.
   useEffect(() => {
     const map = mapRef.current
@@ -88,8 +142,9 @@ export function KakaoMap({
       bounds.extend(position)
       path.push(position)
 
-      // Wrapper carries the counter-filter so the pin's photo and colour survive
-      // the tile inversion; the inner element is the pin itself.
+      // Wrapper carries the counter-filter that cancels whatever the tiles are
+      // filtered by — a no-op while `MAP_FILTER` is `none`, and the thing that
+      // keeps each pin's photo true if it is ever turned back on.
       const wrapper = document.createElement('div')
       wrapper.style.cssText = `filter:${MAP_FILTER}`
       const el = createPinElement(

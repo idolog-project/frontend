@@ -53,6 +53,7 @@ export const ko = {
 
   'map.detail': '자세히 보기',
   'map.close': '닫기',
+  'map.myLocation': '내 위치',
 
   'locations.eyebrow': '촬영지',
   'locations.title': '{name} 촬영지',
@@ -228,6 +229,7 @@ export const en: Record<MessageKey, string> = {
 
   'map.detail': 'View details',
   'map.close': 'Close',
+  'map.myLocation': 'Your location',
 
   'locations.eyebrow': 'Filming locations',
   'locations.title': '{name} filming locations',
@@ -403,6 +405,7 @@ export const zh: Record<MessageKey, string> = {
 
   'map.detail': '查看详情',
   'map.close': '关闭',
+  'map.myLocation': '我的位置',
 
   'locations.eyebrow': '拍摄地',
   'locations.title': '{name} 的拍摄地',

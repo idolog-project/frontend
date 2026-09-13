@@ -11,7 +11,14 @@ const SIZE = { selected: 46, default: 32 } as const
 const RING = { selected: 2.5, default: 2 } as const
 const TAIL = { selected: 7, default: 5 } as const
 
-/** Tinted veil over the photo so a bright shot never fights the dark map. */
+/**
+ * Tinted veil over the photo, darkest at the foot of the disc.
+ *
+ * It was here to stop a bright shot fighting the dark inverted map. The tiles
+ * are light now, so it earns its place differently: it is what a white order
+ * number reads against, and it keeps a pale photo from dissolving into pale
+ * land. Lighten it and the numbered pins on a course map lose their contrast.
+ */
 export const PIN_VEIL = 'linear-gradient(180deg, rgba(11,11,15,.05), rgba(11,11,15,.45))'
 export const PIN_SHADOW = 'drop-shadow(0 4px 8px rgba(0,0,0,.55))'
 
@@ -22,6 +29,45 @@ export function pinGeometry(selected: boolean) {
     tail: selected ? TAIL.selected : TAIL.default,
   }
 }
+
+/**
+ * "You are here", as an element for Kakao's CustomOverlay.
+ *
+ * Deliberately not a pin. The pins mark places worth going to and carry a photo
+ * of each; the viewer's own position is neither, so it takes the shape every
+ * map uses for it — a small filled dot with a halo, which reads as a position
+ * rather than a destination even at country zoom.
+ *
+ * The halo is a ring rather than an animation: a pulsing marker draws the eye
+ * away from the pins, which are the point of the screen.
+ */
+export function createUserDotElement(label: string): HTMLElement {
+  const root = document.createElement('div')
+  root.setAttribute('role', 'img')
+  root.setAttribute('aria-label', label)
+  root.style.cssText = [
+    'width:18px',
+    'height:18px',
+    'border-radius:9999px',
+    // The halo is drawn with a shadow so it costs no extra element and never
+    // affects the overlay's anchor point.
+    `background:${USER_DOT_COLOR}`,
+    'border:2.5px solid #fff',
+    `box-shadow:0 0 0 4px ${USER_DOT_HALO}, 0 2px 6px rgba(0,0,0,.45)`,
+  ].join(';')
+  return root
+}
+
+/**
+ * Ink, not a palette colour.
+ *
+ * Every entry in `IDOL_PALETTE` is spoken for on this map — mint is an idol's
+ * ring, not a spare — so tinting the dot would make the viewer's own position
+ * look like one more idol's location. Near-black inside a white ring belongs to
+ * nobody, and holds up on the light tiles the map now draws.
+ */
+const USER_DOT_COLOR = '#0b0b0f'
+const USER_DOT_HALO = 'rgba(11,11,15,.22)'
 
 /** Builds the pin as an element, for Kakao's CustomOverlay. */
 export function createPinElement(

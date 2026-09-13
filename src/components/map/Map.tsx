@@ -12,6 +12,8 @@ type Props = {
   selectedId?: string | null
   onSelect?: (id: string) => void
   showRoute?: boolean
+  /** Marks where the viewer is. Kakao only — the stand-in has no tiles to put it on. */
+  showUserLocation?: boolean
   className?: string
 }
 
@@ -23,7 +25,14 @@ type Props = {
  * Which pin has its popup open is held here rather than in either map, so the
  * two implementations cannot drift on when a card opens and closes.
  */
-export function Map({ points, selectedId, onSelect, showRoute, className }: Props) {
+export function Map({
+  points,
+  selectedId,
+  onSelect,
+  showRoute,
+  showUserLocation,
+  className,
+}: Props) {
   const [openId, setOpenId] = useState<string | null>(null)
   const close = () => setOpenId(null)
 
@@ -65,7 +74,11 @@ export function Map({ points, selectedId, onSelect, showRoute, className }: Prop
 
   return (
     <>
-      {kakaoKey() ? <KakaoMap {...shared} /> : <MapCanvas {...shared} />}
+      {kakaoKey() ? (
+        <KakaoMap {...shared} showUserLocation={showUserLocation} />
+      ) : (
+        <MapCanvas {...shared} />
+      )}
       {openPoint && <MapPopup point={openPoint} onClose={close} />}
     </>
   )

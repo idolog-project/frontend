@@ -146,10 +146,13 @@ export function MapHomePage() {
           itself so its pins have a containing block, and Tailwind emits
           `.relative` after `.absolute`, so passing `absolute inset-0` here would
           lose to it and collapse the map to zero height. */}
+      {/* Only here. The itinerary and detail maps are about one place each, and
+          a second dot on them would compete with the place they exist to show. */}
       <Map
         points={points}
         selectedId={focusedId}
         onSelect={setFocusedId}
+        showUserLocation
         className="h-full w-full"
       />
 
