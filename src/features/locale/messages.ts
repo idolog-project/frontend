@@ -22,6 +22,8 @@ export const ko = {
   'nav.home': '홈',
   'nav.saved': '저장한 코스',
   'nav.my': '마이페이지',
+  'nav.collapse': '메뉴 접기',
+  'nav.expand': '메뉴 펼치기',
 
   'onboarding.headline': '최애의 뮤직비디오 속으로 걸어 들어가세요.',
 
@@ -202,6 +204,8 @@ export const en: Record<MessageKey, string> = {
   'nav.home': 'Home',
   'nav.saved': 'Saved courses',
   'nav.my': 'Profile',
+  'nav.collapse': 'Collapse the menu',
+  'nav.expand': 'Expand the menu',
 
   'onboarding.headline': "Step into your bias's music video.",
 
@@ -381,6 +385,8 @@ export const zh: Record<MessageKey, string> = {
   'nav.home': '首页',
   'nav.saved': '已保存路线',
   'nav.my': '我的',
+  'nav.collapse': '收起菜单',
+  'nav.expand': '展开菜单',
 
   'onboarding.headline': '走进你本命的 MV 里。',
 
