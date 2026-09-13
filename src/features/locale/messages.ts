@@ -39,6 +39,8 @@ export const ko = {
   'home.loadFailed': '촬영지를 불러오지 못했습니다. 다시 시도해 주세요.',
   'home.empty': '등록된 촬영지가 없어요',
   'home.emptyBody': '다른 아이돌을 골라보세요.',
+  'home.popularIdols': '인기 아이돌',
+  'home.otherIdols': '그 외',
 
   'map.detail': '자세히 보기',
   'map.close': '닫기',
@@ -204,6 +206,8 @@ export const en: Record<MessageKey, string> = {
   'home.loadFailed': "Couldn't load filming locations. Try again.",
   'home.empty': 'No filming locations yet',
   'home.emptyBody': 'Try another idol.',
+  'home.popularIdols': 'Popular idols',
+  'home.otherIdols': 'Others',
 
   'map.detail': 'View details',
   'map.close': 'Close',
@@ -369,6 +373,8 @@ export const zh: Record<MessageKey, string> = {
   'home.loadFailed': '拍摄地加载失败，请重试。',
   'home.empty': '还没有收录的拍摄地',
   'home.emptyBody': '换一位偶像看看。',
+  'home.popularIdols': '热门偶像',
+  'home.otherIdols': '其他',
 
   'map.detail': '查看详情',
   'map.close': '关闭',

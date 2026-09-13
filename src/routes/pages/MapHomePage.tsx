@@ -7,7 +7,12 @@ import { Map, type MapPoint } from '@/components/map/Map'
 import { SpotCard } from '@/components/ui/cards'
 import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
-import { colorForLocation, idolColors } from '@/features/idol/colors'
+import {
+  UNFEATURED_PIN_COLOR,
+  colorForLocation,
+  featuredIdols,
+  idolColors,
+} from '@/features/idol/colors'
 import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 
@@ -29,10 +34,26 @@ export function MapHomePage() {
   const locationsQuery = useAllLocations()
 
   const idols = useMemo(() => idolsQuery.data ?? [], [idolsQuery.data])
-  const colors = useMemo(() => idolColors(idols), [idols])
 
   const idolIdParam = params.get('idol')
   const selectedIdol = idols.find((i) => String(i.id) === idolIdParam) ?? null
+
+  /**
+   * The idols that get a colour, and so the rows the legend shows.
+   *
+   * Normally the five with the most locations. Filtering to an idol outside
+   * that five — only reachable from the full dropdown — appends them, so the
+   * map never goes entirely grey and the legend still explains every pin.
+   */
+  const legendIdols = useMemo(() => {
+    const featured = featuredIdols(idols)
+    if (selectedIdol && !featured.some((i) => i.id === selectedIdol.id)) {
+      return [...featured, selectedIdol]
+    }
+    return featured
+  }, [idols, selectedIdol])
+
+  const colors = useMemo(() => idolColors(legendIdols), [legendIdols])
 
   const locations = useMemo(() => {
     const all = locationsQuery.data ?? []
@@ -49,7 +70,7 @@ export function MapHomePage() {
         latitude: location.latitude,
         longitude: location.longitude,
         label: location.name,
-        color: colorForLocation(location, colors),
+        color: colorForLocation(location, colors) ?? UNFEATURED_PIN_COLOR,
         imageUrl: location.imageUrl,
         caption: location.musicVideos.map((mv) => mv.title).join(', '),
         detailPath: `/locations/${location.id}`,
@@ -88,7 +109,9 @@ export function MapHomePage() {
               <span
                 aria-hidden
                 className="h-2.5 w-2.5 rounded-full"
-                style={{ background: colors.get(selectedIdol.id) }}
+                style={{
+                  background: colors.get(selectedIdol.id) ?? UNFEATURED_PIN_COLOR,
+                }}
               />
             ) : null}
             <span className="font-display text-label-caps uppercase">
@@ -128,7 +151,7 @@ export function MapHomePage() {
                     <span
                       aria-hidden
                       className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ background: colors.get(idol.id) }}
+                      style={{ background: colors.get(idol.id) ?? UNFEATURED_PIN_COLOR }}
                     />
                     <span className="flex-1 truncate">{idol.name}</span>
                     <span className="text-caption tabular-nums text-text-subtle">
@@ -142,20 +165,61 @@ export function MapHomePage() {
         </div>
       </div>
 
-      {/* Pin colour legend — only useful while every idol is on the map. */}
-      {!selectedIdol && idols.length > 0 && (
-        <ul className="absolute bottom-screen right-screen z-20 flex flex-col gap-1.5 rounded border border-border bg-background/85 px-3 py-2.5 backdrop-blur-md">
-          {idols.map((idol) => (
-            <li key={idol.id} className="flex items-center gap-2 text-caption">
-              <span
-                aria-hidden
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: colors.get(idol.id) }}
-              />
-              {idol.name}
-            </li>
-          ))}
-        </ul>
+      {/* Pin colour legend, and the quickest way to filter.
+          It stays put while a filter is active: it is how you switch idols or
+          get back to all of them without reopening the dropdown. */}
+      {legendIdols.length > 0 && (
+        <div className="absolute bottom-screen right-screen z-20 w-52 rounded border border-border bg-background/85 px-3 py-2.5 backdrop-blur-md">
+          <p className="mb-2 font-display text-label-caps uppercase text-text-subtle">
+            {t('home.popularIdols')}
+          </p>
+          <ul className="flex flex-col gap-0.5">
+            {legendIdols.map((idol) => {
+              const active = idol.id === selectedIdol?.id
+              return (
+                <li key={idol.id}>
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    // Pressing the active row clears the filter, so the legend
+                    // alone can take you back to the whole map.
+                    onClick={() => chooseIdol(active ? null : idol.id)}
+                    className={cn(
+                      '-mx-1.5 flex w-[calc(100%+0.75rem)] items-center gap-2 rounded px-1.5 py-1 text-left text-caption transition-colors hover:bg-surface-raised',
+                      active && 'bg-surface-raised text-primary',
+                    )}
+                  >
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ background: colors.get(idol.id) }}
+                    />
+                    <span className="flex-1 truncate">{idol.name}</span>
+                    <span className="tabular-nums text-text-subtle">
+                      {idol.locationCount}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+
+            {/* Without this the grey pins are unexplained — the reader cannot
+                tell a quiet idol from a broken colour. */}
+            {!selectedIdol && idols.length > legendIdols.length && (
+              <li className="flex items-center gap-2 px-1.5 py-1 text-caption text-text-subtle">
+                <span
+                  aria-hidden
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ background: UNFEATURED_PIN_COLOR }}
+                />
+                <span className="flex-1 truncate">{t('home.otherIdols')}</span>
+                <span className="tabular-nums">
+                  {idols.length - legendIdols.length}
+                </span>
+              </li>
+            )}
+          </ul>
+        </div>
       )}
 
       {/* Fixed-height panel over the map. The cards must keep their natural
@@ -187,7 +251,7 @@ export function MapHomePage() {
               <li key={location.id} className="shrink-0">
                 <SpotCard
                   location={location}
-                  accentColor={colorForLocation(location, colors)}
+                  accentColor={colorForLocation(location, colors) ?? UNFEATURED_PIN_COLOR}
                   selected={focusedId === String(location.id)}
                   onFocus={() => setFocusedId(String(location.id))}
                 />
