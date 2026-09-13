@@ -257,9 +257,13 @@ export function MapHomePage() {
         aria-controls={listId}
         aria-label={t(listOpen ? 'home.collapseList' : 'home.expandList')}
         className={cn(
-          'absolute top-1/2 z-20 hidden h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-text-muted backdrop-blur-md transition-colors hover:border-border-strong hover:text-text md:flex',
-          // 20px margin + the panel's 380px, then a hair of daylight.
-          listOpen ? 'md:left-[408px]' : 'md:left-screen',
+          // A tab hanging off the right of whatever is to its left — the panel
+          // when open, the window edge when not. A free-floating circle was
+          // there first and read as part of the map: 36px of dark on dark, at
+          // the one place the eye is not looking.
+          'absolute top-1/2 z-20 hidden h-14 w-7 -translate-y-1/2 items-center justify-center rounded-r-lg border border-l-0 border-border bg-surface text-text transition-colors hover:bg-surface-raised hover:text-primary md:flex',
+          // 20px margin + the panel's 380px. Flush, so the two read as one piece.
+          listOpen ? 'md:left-[400px]' : 'md:left-0',
         )}
       >
         {listOpen ? (
