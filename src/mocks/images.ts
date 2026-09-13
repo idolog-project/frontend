@@ -43,3 +43,17 @@ export const SCENE = {
   // Spot detail gallery
   gallery: [seed(50), seed(51), seed(52)],
 } as const
+
+/**
+ * Backgrounds the language screen picks one of, at random, per visit.
+ *
+ * Hand-picked rather than "every file in the folder". The seed set also holds
+ * UI mock-ups lifted from the design tool — screenshots with panels and labels
+ * baked in — and close-up portraits, and neither can sit behind a headline: one
+ * shows a second interface inside the app, the other puts a stranger's face on
+ * the first screen anyone sees.
+ *
+ * What is left is wide, dark and quiet, which is what the gradient over it
+ * expects. A brighter frame would leave the white headline fighting the photo.
+ */
+export const ONBOARDING_SCENES = [2, 4, 13, 18, 19, 21, 40, 41, 47, 51].map(seed)

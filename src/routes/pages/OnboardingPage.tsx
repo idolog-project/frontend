@@ -1,9 +1,10 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/Button'
 import { LOCALES, LOCALE_LABEL, useLocaleStore, type Locale } from '@/features/locale/store'
 import { useT } from '@/features/locale/useT'
-import { SCENE } from '@/mocks/images'
+import { ONBOARDING_SCENES } from '@/mocks/images'
 
 /**
  * The one screen the system allows to be a single quiet moment: full-bleed
@@ -14,6 +15,18 @@ export function OnboardingPage() {
   const navigate = useNavigate()
   const setLocale = useLocaleStore((s) => s.setLocale)
 
+  /**
+   * A different frame each visit, chosen once.
+   *
+   * In state rather than computed while rendering: picking inline would deal a
+   * new photo on every re-render, so the background would flicker as the
+   * language store settles. The gate shows this screen once per visit, so once
+   * per mount is once per visit.
+   */
+  const [backdrop] = useState(
+    () => ONBOARDING_SCENES[Math.floor(Math.random() * ONBOARDING_SCENES.length)],
+  )
+
   const choose = (locale: Locale) => {
     setLocale(locale)
     navigate('/login', { replace: true })
@@ -23,7 +36,7 @@ export function OnboardingPage() {
     <div className="relative h-full overflow-hidden">
       {/* Decorative — and this is the screen where the user picks a language, so
           announcing a description in a language they may not read helps nobody. */}
-      <img src={SCENE.onboarding} alt="" className="h-full w-full object-cover" />
+      <img src={backdrop} alt="" className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       {/* The 64px inset is a desktop luxury — on a 375px phone it would eat a
