@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="촬영지 기본 이미지">
+  <rect width="64" height="64" rx="32" fill="#24232D"/>
+  <path d="M12 45.5 25.2 31l8.3 8.8 6-5.9L52 45.5V50H12Z" fill="#6E668C"/>
+  <path d="M17 28.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" fill="#F7B4C8"/>
+  <path d="M23 19h18a4 4 0 0 1 4 4v15H19V23a4 4 0 0 1 4-4Z" fill="#3D3A4E" stroke="#F6F3FA" stroke-width="2"/>
+  <path d="M27 19v-3h10v3M28 29h8" fill="none" stroke="#F6F3FA" stroke-linecap="round" stroke-width="2"/>
+  <circle cx="32" cy="28.5" r="4.5" fill="#F6F3FA"/>
+  <circle cx="32" cy="28.5" r="2.5" fill="#F36B9A"/>
+</svg>

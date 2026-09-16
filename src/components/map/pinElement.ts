@@ -1,5 +1,7 @@
 import type { MapPoint } from './MapCanvas'
 
+const FALLBACK_IMAGE_URL = '/images/location-placeholder.svg'
+
 /**
  * The pin's geometry and its raw-DOM rendering, kept out of `Pin.tsx` so that
  * file exports only a component and stays fast-refresh friendly.
@@ -112,20 +114,22 @@ export function createPinElement(
     `opacity:${selected ? 1 : 0.92}`,
   ].join(';')
 
-  if (point.imageUrl) {
-    const img = document.createElement('img')
-    img.src = point.imageUrl
-    img.alt = ''
-    img.loading = 'lazy'
-    img.style.cssText = [
-      'width:100%',
-      'height:100%',
-      'object-fit:cover',
-      'display:block',
-      `filter:${selected ? 'none' : 'grayscale(.35)'}`,
-    ].join(';')
-    disc.appendChild(img)
+  const img = document.createElement('img')
+  img.src = point.imageUrl ?? FALLBACK_IMAGE_URL
+  img.alt = ''
+  img.loading = 'lazy'
+  img.onerror = () => {
+    if (img.src.endsWith(FALLBACK_IMAGE_URL)) return
+    img.src = FALLBACK_IMAGE_URL
   }
+  img.style.cssText = [
+    'width:100%',
+    'height:100%',
+    'object-fit:cover',
+    'display:block',
+    `filter:${selected ? 'none' : 'grayscale(.35)'}`,
+  ].join(';')
+  disc.appendChild(img)
 
   const veil = document.createElement('span')
   veil.style.cssText = `position:absolute;inset:0;background:${PIN_VEIL}`

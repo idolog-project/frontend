@@ -1,6 +1,8 @@
 import type { MapPoint } from './MapCanvas'
 import { PIN_SHADOW, PIN_VEIL, pinGeometry } from './pinElement'
 
+const FALLBACK_IMAGE_URL = '/images/location-placeholder.svg'
+
 /**
  * The map pin: a photo disc over a pointer — the draft's idea. The disc is a
  * real image slot, so swapping the seed photo for a music-video still is a data
@@ -42,15 +44,17 @@ export function Pin({
           opacity: selected ? 1 : 0.92,
         }}
       >
-        {point.imageUrl && (
-          <img
-            src={point.imageUrl}
-            alt=""
-            loading="lazy"
-            className="h-full w-full object-cover"
-            style={{ filter: selected ? 'none' : 'grayscale(.35)' }}
-          />
-        )}
+        <img
+          src={point.imageUrl ?? FALLBACK_IMAGE_URL}
+          alt=""
+          loading="lazy"
+          className="h-full w-full object-cover"
+          style={{ filter: selected ? 'none' : 'grayscale(.35)' }}
+          onError={(event) => {
+            if (event.currentTarget.src.endsWith(FALLBACK_IMAGE_URL)) return
+            event.currentTarget.src = FALLBACK_IMAGE_URL
+          }}
+        />
         <span className="absolute inset-0" style={{ background: PIN_VEIL }} />
         {point.order !== undefined && (
           <span
