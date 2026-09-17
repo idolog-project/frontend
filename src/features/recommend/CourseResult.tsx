@@ -73,15 +73,15 @@ export function CourseResult({
   ].filter(Boolean) as string[]
 
   return (
-    <div className="flex h-full flex-col md:flex-row">
-      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto md:w-[45%] md:flex-none">
+    <div className="flex h-full min-h-0 min-w-0 flex-col md:flex-row">
+      <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden md:w-[45%] md:flex-none">
         {courses.length > 1 && (
         <div
           role="tablist"
           aria-label={t('result.reason')}
-          // Phone: pinned to the top of the column, so switching courses does
-          // not mean scrolling the whole itinerary back up first.
-          className="sticky top-0 z-10 flex gap-1 overflow-x-auto border-b border-border bg-background px-screen md:static md:bg-transparent"
+          // Keep tabs outside the scrolling panel and prevent flex shrinking
+          // from collapsing them when the itinerary exceeds the viewport.
+          className="z-10 grid shrink-0 grid-cols-3 gap-1 border-b border-border bg-background px-2 lg:px-screen"
         >
           {courses.map((course) => (
             <button
@@ -96,7 +96,7 @@ export function CourseResult({
                 setFocusedPlace(null)
               }}
               className={cn(
-                'shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-body-sm transition-colors',
+                'min-w-0 whitespace-normal break-words border-b-2 px-2 py-3 text-body-sm transition-colors lg:px-3',
                 course.id === activeId
                   ? 'border-accent text-text'
                   : 'border-transparent text-text-subtle hover:text-text',
@@ -116,7 +116,7 @@ export function CourseResult({
                 'aria-labelledby': `course-tab-${active.id}`,
               }
             : {})}
-          className="flex flex-col gap-6 px-screen py-6 md:gap-8 md:py-8"
+          className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-screen py-6 md:gap-8 md:py-8"
         >
           <header className="flex flex-col gap-3">
             <h1 className="font-display text-display-md text-balance">{active.title}</h1>
@@ -257,7 +257,7 @@ export function CourseResult({
           <p className="text-caption text-text-subtle">{t('result.source')}</p>
         </div>
 
-        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/85 px-screen py-3 backdrop-blur-md md:block md:py-4">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border bg-background/85 px-screen py-3 backdrop-blur-md md:block md:py-4">
           <button
             type="button"
             aria-expanded={mapOpen}
