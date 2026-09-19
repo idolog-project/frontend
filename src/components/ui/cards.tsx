@@ -34,12 +34,14 @@ export function SpotCard({
   const distance = format.distance(distanceMeters ?? null)
 
   /**
-   * The song is the headline: you come here from a music video, not from a
-   * gazetteer. A place can appear in several, so they are listed together.
+   * The place is the headline and the song sits under it.
    *
-   * A location with no video falls back to its own name — better a card headed
-   * by where it is than one headed by nothing. The place line is then dropped,
-   * since it would repeat the heading word for word.
+   * These cards answer "where would I go", and the map beside them is a map of
+   * places — a list headed by song titles reads as a different list from the
+   * pins it belongs to. The video is why the place is here at all, so it stays,
+   * one line down.
+   *
+   * A place can appear in several videos, so they are listed together.
    */
   const songTitle = location.musicVideos.map((video) => video.title).join(', ')
 
@@ -94,7 +96,7 @@ export function SpotCard({
 
       <div className="flex flex-col gap-1.5 p-4">
         <h3 className="font-display text-title-md leading-tight">
-          {songTitle || location.name}
+          {location.name}
         </h3>
 
         {/* A grid, not a stack of rows: the first column takes the width of the
@@ -107,8 +109,8 @@ export function SpotCard({
         <dl className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-body-sm">
           {songTitle && (
             <>
-              <dt className="text-text-subtle">{t('card.place')}</dt>
-              <dd className="min-w-0 truncate text-text-muted">{location.name}</dd>
+              <dt className="text-text-subtle">{t('card.song')}</dt>
+              <dd className="min-w-0 truncate text-text-muted">{songTitle}</dd>
             </>
           )}
           {idolName && (

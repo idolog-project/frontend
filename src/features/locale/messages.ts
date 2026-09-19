@@ -53,7 +53,7 @@ export const ko = {
   'home.expandList': '목록 펼치기',
 
   // The colon rides in the value: Chinese wants its own full-width one.
-  'card.place': '장소:',
+  'card.song': '노래 제목:',
   'card.artist': '아티스트:',
 
   'map.detail': '자세히 보기',
@@ -241,7 +241,7 @@ export const en: Record<MessageKey, string> = {
   'home.collapseList': 'Collapse the list',
   'home.expandList': 'Show the list',
 
-  'card.place': 'Place:',
+  'card.song': 'Song:',
   'card.artist': 'Artist:',
 
   'map.detail': 'View details',
@@ -429,7 +429,7 @@ export const zh: Record<MessageKey, string> = {
   'home.collapseList': '收起列表',
   'home.expandList': '展开列表',
 
-  'card.place': '地点：',
+  'card.song': '歌曲：',
   'card.artist': '艺人：',
 
   'map.detail': '查看详情',
