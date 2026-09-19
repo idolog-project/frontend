@@ -9,6 +9,7 @@ import { EmptyState, ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
 import { IdolSearch } from '@/features/idol/IdolSearch'
 import {
+  IDOL_PALETTE,
   UNFEATURED_PIN_COLOR,
   colorForLocation,
   featuredIdols,
@@ -72,23 +73,50 @@ export function MapHomePage() {
 
   const idols = useMemo(() => idolsQuery.data ?? [], [idolsQuery.data])
 
-  const idolIdParam = params.get('idol')
-  const selectedIdol = idols.find((i) => String(i.id) === idolIdParam) ?? null
+  /**
+   * The filter, as a set of idol ids.
+   *
+   * Repeated `?idol=` params rather than one comma-joined value: the browser
+   * and `URLSearchParams` both already know how to carry a repeated key, and a
+   * separator would have to be chosen, escaped and parsed by hand.
+   *
+   * Empty means no filter, which is not the same as "nobody" — an empty
+   * selection shows every location.
+   */
+  const selectedIds = useMemo(() => {
+    const known = new Set(idols.map((idol) => idol.id))
+    return new Set(
+      params
+        .getAll('idol')
+        .map(Number)
+        .filter((id) => known.has(id)),
+    )
+  }, [params, idols])
+
+  const selectedIdols = useMemo(
+    () => idols.filter((idol) => selectedIds.has(idol.id)),
+    [idols, selectedIds],
+  )
 
   /**
    * The idols that get a colour, and so the rows the legend shows.
    *
-   * Normally the five with the most locations. Filtering to an idol outside
-   * that five — only reachable from the full dropdown — appends them, so the
-   * map never goes entirely grey and the legend still explains every pin.
+   * The five with the most locations, plus any others being filtered on — the
+   * latter only reachable from search, and without a colour their pins would
+   * be the same grey as the idols nobody asked for.
+   *
+   * Capped at the palette. Six distinct colours is the whole budget, so beyond
+   * that a selected idol keeps grey pins rather than borrowing a colour the
+   * legend has already promised to someone else. The search line under the box
+   * still names every idol in the filter, so nothing is hidden — only uncoloured.
    */
   const legendIdols = useMemo(() => {
     const featured = featuredIdols(idols)
-    if (selectedIdol && !featured.some((i) => i.id === selectedIdol.id)) {
-      return [...featured, selectedIdol]
-    }
-    return featured
-  }, [idols, selectedIdol])
+    const extras = selectedIdols.filter(
+      (idol) => !featured.some((f) => f.id === idol.id),
+    )
+    return [...featured, ...extras].slice(0, IDOL_PALETTE.length)
+  }, [idols, selectedIdols])
 
   const colors = useMemo(() => idolColors(legendIdols), [legendIdols])
 
@@ -120,11 +148,15 @@ export function MapHomePage() {
 
   const locations = useMemo(() => {
     const all = locationsQuery.data ?? []
-    const visible = selectedIdol
-      ? all.filter((location) =>
-          location.musicVideos.some((mv) => mv.idolId === selectedIdol.id),
-        )
-      : all
+    // Any of the chosen idols, not all of them: a location that appears in one
+    // selected idol's video belongs on the map, and almost no place would
+    // survive a rule that demanded every one of them.
+    const visible =
+      selectedIds.size === 0
+        ? all
+        : all.filter((location) =>
+            location.musicVideos.some((mv) => selectedIds.has(mv.idolId)),
+          )
 
     /**
      * Photographed places first.
@@ -141,7 +173,7 @@ export function MapHomePage() {
     return visible.toSorted(
       (a, b) => Number(Boolean(b.imageUrl)) - Number(Boolean(a.imageUrl)),
     )
-  }, [locationsQuery.data, selectedIdol])
+  }, [locationsQuery.data, selectedIds])
 
   const points: MapPoint[] = useMemo(
     () =>
@@ -158,8 +190,23 @@ export function MapHomePage() {
     [locations, colors],
   )
 
-  const chooseIdol = (id: number | null) => {
-    setParams(id === null ? {} : { idol: String(id) }, { replace: true })
+  /** Adds an idol to the filter, or takes it back out. */
+  const toggleIdol = (id: number) => {
+    const next = new Set(selectedIds)
+    if (!next.delete(id)) next.add(id)
+    setParams(
+      // Repeated key, in the catalogue's own order so the URL is stable no
+      // matter which order they were tapped in.
+      idols
+        .filter((idol) => next.has(idol.id))
+        .map((idol): [string, string] => ['idol', String(idol.id)]),
+      { replace: true },
+    )
+    setFocusedId(null)
+  }
+
+  const clearIdols = () => {
+    setParams({}, { replace: true })
     setFocusedId(null)
   }
 
@@ -186,10 +233,11 @@ export function MapHomePage() {
       <div className="pointer-events-none absolute left-screen right-screen top-screen z-20 flex justify-end md:left-auto">
         <IdolSearch
           idols={idols}
-          selectedIdol={selectedIdol}
+          selectedIdols={selectedIdols}
           colors={colors}
           spotCount={locations.length}
-          onSelect={chooseIdol}
+          onToggle={toggleIdol}
+          onClear={clearIdols}
         />
       </div>
 
@@ -209,15 +257,15 @@ export function MapHomePage() {
           </p>
           <ul className="flex flex-col gap-0.5">
             {legendIdols.map((idol) => {
-              const active = idol.id === selectedIdol?.id
+              const active = selectedIds.has(idol.id)
               return (
                 <li key={idol.id}>
                   <button
                     type="button"
                     aria-pressed={active}
-                    // Pressing the active row clears the filter, so the legend
-                    // alone can take you back to the whole map.
-                    onClick={() => chooseIdol(active ? null : idol.id)}
+                    // Each row is its own switch, so several can be on at once
+                    // and pressing a lit one takes just that idol back out.
+                    onClick={() => toggleIdol(idol.id)}
                     className={cn(
                       '-mx-1.5 flex w-[calc(100%+0.75rem)] items-center gap-2 rounded px-1.5 py-1 text-left text-caption transition-colors hover:bg-surface-raised',
                       active && 'bg-surface-raised text-primary',
@@ -239,7 +287,7 @@ export function MapHomePage() {
 
             {/* Without this the grey pins are unexplained — the reader cannot
                 tell a quiet idol from a broken colour. */}
-            {!selectedIdol && idols.length > legendIdols.length && (
+            {selectedIds.size === 0 && idols.length > legendIdols.length && (
               <li className="flex items-center gap-2 px-1.5 py-1 text-caption text-text-subtle">
                 <span
                   aria-hidden

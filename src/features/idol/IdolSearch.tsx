@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Search, X } from 'lucide-react'
+import { Check, Search, X } from 'lucide-react'
 
 import type { Idol } from '@/api/schemas'
 import { UNFEATURED_PIN_COLOR } from '@/features/idol/colors'
@@ -20,18 +20,21 @@ import { cn } from '@/lib/cn'
  */
 export function IdolSearch({
   idols,
-  selectedIdol,
+  selectedIdols,
   colors,
   spotCount,
-  onSelect,
+  onToggle,
+  onClear,
 }: {
   idols: Idol[]
-  selectedIdol: Idol | null
+  /** Everyone currently filtered on. Empty means the whole map. */
+  selectedIdols: Idol[]
   /** Legend colours, so a suggestion's dot matches its pins. */
   colors: Map<number, string>
   /** Locations currently on the map. */
   spotCount: number
-  onSelect: (idolId: number | null) => void
+  onToggle: (idolId: number) => void
+  onClear: () => void
 }) {
   const t = useT()
   const listId = useId()
@@ -42,6 +45,10 @@ export function IdolSearch({
   const [highlight, setHighlight] = useState(0)
 
   const suggestions = useMemo(() => searchIdols(idols, query), [idols, query])
+  const selectedIds = useMemo(
+    () => new Set(selectedIdols.map((idol) => idol.id)),
+    [selectedIdols],
+  )
 
   // The list scrolls, so arrowing past its edge has to bring the row along —
   // otherwise the highlight walks off screen and the keyboard feels broken.
@@ -56,10 +63,17 @@ export function IdolSearch({
     setHighlight(0)
   }
 
-  const choose = (idolId: number | null) => {
-    onSelect(idolId)
-    close()
-    inputRef.current?.blur()
+  /**
+   * Flips one idol in or out of the filter and leaves the list open.
+   *
+   * Closing after each pick would make choosing three idols three round trips
+   * through the box. The query is cleared instead, which puts the popularity
+   * order back so the next name is typed against the same starting list.
+   */
+  const toggle = (idolId: number) => {
+    onToggle(idolId)
+    setQuery('')
+    setHighlight(0)
   }
 
   const onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -79,7 +93,7 @@ export function IdolSearch({
     }
     if (event.key === 'Enter') {
       event.preventDefault()
-      choose(suggestions[highlight].id)
+      toggle(suggestions[highlight].id)
     }
   }
 
@@ -132,13 +146,25 @@ export function IdolSearch({
             'md:bg-transparent md:px-0 md:py-0 md:pr-1 md:backdrop-blur-none',
           )}
         >
-          <span className="truncate">{selectedIdol?.name ?? t('home.filterAll')}</span>
+          {/* One name reads better than a count of one; past that the names
+              would run past the box, so the first stands for the rest. The
+              whole selection is still legible in the legend and the URL. */}
+          <span className="truncate">
+            {selectedIdols.length === 0
+              ? t('home.filterAll')
+              : selectedIdols.length === 1
+                ? selectedIdols[0].name
+                : t('home.filterMore', {
+                    name: selectedIdols[0].name,
+                    count: selectedIdols.length - 1,
+                  })}
+          </span>
           <span aria-hidden>·</span>
           <span className="tabular-nums">{t('home.spotCount', { count: spotCount })}</span>
-          {selectedIdol && (
+          {selectedIdols.length > 0 && (
             <button
               type="button"
-              onClick={() => choose(null)}
+              onClick={onClear}
               aria-label={t('home.clearFilter')}
               // The padding is the tap area on a phone — a 13px glyph is not one.
               // It hangs out of the line rather than growing it, so the row keeps
@@ -160,6 +186,7 @@ export function IdolSearch({
               ref={listRef}
               id={listId}
               role="listbox"
+              aria-multiselectable
               aria-label={t('home.searchSuggestions')}
               // Roughly seven rows: enough to judge the ranking at a glance,
               // short enough to leave the map visible behind it. On a short
@@ -173,15 +200,15 @@ export function IdolSearch({
                     type="button"
                     id={`${listId}-${index}`}
                     role="option"
-                    aria-selected={index === highlight}
+                    aria-selected={selectedIds.has(idol.id)}
                     // Keeps focus in the input, so the wrapper's blur never fires.
                     onMouseDown={(event) => event.preventDefault()}
                     onMouseEnter={() => setHighlight(index)}
-                    onClick={() => choose(idol.id)}
+                    onClick={() => toggle(idol.id)}
                     className={cn(
                       'flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-body-sm transition-colors',
                       index === highlight && 'bg-surface-raised',
-                      idol.id === selectedIdol?.id && 'text-primary',
+                      selectedIds.has(idol.id) && 'text-primary',
                     )}
                   >
                     <span
@@ -195,6 +222,17 @@ export function IdolSearch({
                     <span className="tabular-nums text-caption text-text-subtle">
                       {t('home.spotCount', { count: idol.locationCount })}
                     </span>
+                    {/* The list stays open across picks, so each row has to say
+                        for itself whether it is already in the filter. */}
+                    <Check
+                      size={14}
+                      strokeWidth={2.5}
+                      aria-hidden
+                      className={cn(
+                        'shrink-0',
+                        selectedIds.has(idol.id) ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
                   </button>
                 </li>
               ))}
