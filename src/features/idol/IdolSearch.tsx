@@ -7,6 +7,9 @@ import { searchIdols } from '@/features/idol/search'
 import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 
+/** How many idols the status line names before it falls back to a count. */
+const NAMES_SHOWN = 3
+
 /**
  * Search box for the map's idol filter.
  *
@@ -146,17 +149,21 @@ export function IdolSearch({
             'md:bg-transparent md:px-0 md:py-0 md:pr-1 md:backdrop-blur-none',
           )}
         >
-          {/* One name reads better than a count of one; past that the names
-              would run past the box, so the first stands for the rest. The
-              whole selection is still legible in the legend and the URL. */}
+          {/* Names while they fit, a count once they do not. Three is what the
+              box holds before the line starts eating itself with an ellipsis,
+              and a name says more than a number — past three the rest are still
+              legible in the legend and the URL. */}
           <span className="truncate">
             {selectedIdols.length === 0
               ? t('home.filterAll')
-              : selectedIdols.length === 1
-                ? selectedIdols[0].name
+              : selectedIdols.length <= NAMES_SHOWN
+                ? selectedIdols.map((idol) => idol.name).join(', ')
                 : t('home.filterMore', {
-                    name: selectedIdols[0].name,
-                    count: selectedIdols.length - 1,
+                    names: selectedIdols
+                      .slice(0, NAMES_SHOWN)
+                      .map((idol) => idol.name)
+                      .join(', '),
+                    count: selectedIdols.length - NAMES_SHOWN,
                   })}
           </span>
           <span aria-hidden>·</span>
