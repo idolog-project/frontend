@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { ArrowLeft, Bus, Camera, CirclePlay, MapPin, Sunrise } from 'lucide-react'
 
-import { useLocation as useLocationQuery } from '@/api/queries'
+import { useIdols, useLocation as useLocationQuery } from '@/api/queries'
 import { Map } from '@/components/map/Map'
 import { Button } from '@/components/ui/Button'
 import { ButtonLink } from '@/components/ui/ButtonLink'
@@ -31,9 +31,9 @@ import { SCENE } from '@/mocks/images'
 const HERO_HEIGHT = 'h-72 md:h-[420px]'
 
 /**
- * The one screen the draft covered end to end. "재현 가이드" and the gallery were
- * kept by decision; the draft's share and save-photo-spot actions were dropped
- * as out of scope.
+ * The one screen the draft covered end to end. The photo guide and the gallery
+ * were kept by decision; the draft's share and save-photo-spot actions were
+ * dropped as out of scope.
  */
 export function LocationDetailPage() {
   const t = useT()
@@ -42,6 +42,9 @@ export function LocationDetailPage() {
   const navigate = useNavigate()
   const id = Number(locationId)
   const query = useLocationQuery(Number.isFinite(id) ? id : undefined)
+  // A location carries only `idolId`s, so the names come from the catalogue.
+  // Called before the early returns below — hooks cannot sit behind a branch.
+  const idolsQuery = useIdols()
 
   if (query.isPending) {
     return (
@@ -78,6 +81,11 @@ export function LocationDetailPage() {
   const location = query.data
   const credit = location.musicVideos[0]
   const releasedOn = format.date(credit?.releaseDate ?? null)
+  // Falls back to an empty record while the catalogue is still loading, which
+  // simply leaves the singer out rather than holding the whole page back.
+  const idolNameById: Record<number, string> = Object.fromEntries(
+    (idolsQuery.data ?? []).map((idol) => [idol.id, idol.name]),
+  )
 
   return (
     <article className="flex flex-col pb-16">
@@ -94,7 +102,9 @@ export function LocationDetailPage() {
         >
           <ArrowLeft size={20} strokeWidth={1.5} aria-hidden />
         </button>
-        <ViewfinderFrame label={t('detail.recreateBadge')} />
+        {/* No label: the brackets carry the idea on their own here, and the
+            badge repeated a line the page already says in full below. */}
+        <ViewfinderFrame />
       </Hero>
 
       <div className="-mt-12 grid grid-cols-1 gap-12 px-screen lg:grid-cols-[3fr_2fr]">
@@ -113,6 +123,13 @@ export function LocationDetailPage() {
                 {location.musicVideos.map((video, index) => (
                   <Fragment key={video.id}>
                     {index > 0 && <span aria-hidden>·</span>}
+                    {/* The singer sits against their own title rather than in a
+                        list of its own, so a place used by two idols says which
+                        song belongs to which. Muted against the bright title,
+                        so the pair reads as one credit and not two items. */}
+                    {idolNameById[video.idolId] && (
+                      <span className="-mr-1">{idolNameById[video.idolId]}</span>
+                    )}
                     {video.youtubeUrl ? (
                       <a
                         href={video.youtubeUrl}

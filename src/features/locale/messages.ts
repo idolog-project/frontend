@@ -71,7 +71,7 @@ export const ko = {
   'detail.back': '뒤로 가기',
   'detail.recreateBadge': '이 장면 재현하기',
   'detail.scene': '이 장면은',
-  'detail.guide': '재현 가이드',
+  'detail.guide': '포토 가이드',
   'detail.guideBody':
     '원본과 같은 앵글은 피사체에서 15m쯤 물러나 광각(24-35mm)으로 잡을 때 나옵니다. 수평선이 구조물 뒤로 지나가도록 두고, 흐린 날을 고르면 색감까지 가까워집니다.',
   'detail.watchMv': '{title} 뮤직비디오 보기',
@@ -253,7 +253,7 @@ export const en: Record<MessageKey, string> = {
   'detail.back': 'Go back',
   'detail.recreateBadge': 'Recreate this shot',
   'detail.scene': 'The scene',
-  'detail.guide': 'How to recreate it',
+  'detail.guide': 'Photo guide',
   'detail.guideBody':
     'To match the original angle, stand about 15 metres back from your subject and shoot wide, 24-35mm. Keep the horizon running behind the structure, and pick an overcast day to get close to the original colour.',
   'detail.watchMv': 'Watch the {title} music video',
@@ -435,7 +435,7 @@ export const zh: Record<MessageKey, string> = {
   'detail.back': '返回',
   'detail.recreateBadge': '复刻这一幕',
   'detail.scene': '这一幕',
-  'detail.guide': '复刻指南',
+  'detail.guide': '拍摄指南',
   'detail.guideBody':
     '退到距离主体约 15 米，用 24-35mm 广角拍。让海平线从建筑物后方穿过，选阴天拍，颜色会更接近原片。',
   'detail.watchMv': '观看《{title}》MV',
