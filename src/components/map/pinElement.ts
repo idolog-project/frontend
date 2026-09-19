@@ -1,6 +1,5 @@
+import { LOCATION_PLACEHOLDER } from '@/lib/placeholders'
 import type { MapPoint } from './MapCanvas'
-
-const FALLBACK_IMAGE_URL = '/images/location-placeholder.svg'
 
 /**
  * The pin's geometry and its raw-DOM rendering, kept out of `Pin.tsx` so that
@@ -139,12 +138,14 @@ export function createPinElement(
   ].join(';')
 
   const img = document.createElement('img')
-  img.src = point.imageUrl ?? FALLBACK_IMAGE_URL
+  // Before `src`: once the request is out, the header is already sent.
+  img.referrerPolicy = 'no-referrer'
+  img.src = point.imageUrl ?? LOCATION_PLACEHOLDER
   img.alt = ''
   img.loading = 'lazy'
   img.onerror = () => {
-    if (img.src.endsWith(FALLBACK_IMAGE_URL)) return
-    img.src = FALLBACK_IMAGE_URL
+    if (img.src.endsWith(LOCATION_PLACEHOLDER)) return
+    img.src = LOCATION_PLACEHOLDER
   }
   img.style.cssText = [
     'width:100%',

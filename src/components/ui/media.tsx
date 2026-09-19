@@ -27,7 +27,7 @@ export function Hero({
   return (
     <section className={cn('relative w-full overflow-hidden bg-surface', height)}>
       {imageUrl && (
-        <img src={imageUrl} alt={alt} className="h-full w-full object-cover" />
+        <img referrerPolicy="no-referrer" src={imageUrl} alt={alt} className="h-full w-full object-cover" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
       {children}
@@ -85,6 +85,7 @@ export function GalleryStrip({
           className="h-40 w-56 shrink-0 overflow-hidden rounded border border-border bg-surface-raised md:h-48 md:w-64"
         >
           <img
+            referrerPolicy="no-referrer"
             src={image.url}
             alt={image.alt}
             className="h-full w-full object-cover"

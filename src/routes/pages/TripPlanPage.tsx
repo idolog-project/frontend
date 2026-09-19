@@ -71,6 +71,7 @@ export function TripPlanPage() {
           <>
             {locationQuery.data.imageUrl && (
               <img
+                referrerPolicy="no-referrer"
                 src={locationQuery.data.imageUrl}
                 alt=""
                 className="h-14 w-20 shrink-0 rounded object-cover md:h-16 md:w-24"

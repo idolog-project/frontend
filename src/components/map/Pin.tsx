@@ -1,7 +1,7 @@
+import { LOCATION_PLACEHOLDER } from '@/lib/placeholders'
 import type { MapPoint } from './MapCanvas'
 import { PIN_SHADOW, PIN_VEIL, pinGeometry } from './pinElement'
 
-const FALLBACK_IMAGE_URL = '/images/location-placeholder.svg'
 
 /**
  * The map pin: a photo disc over a pointer — the draft's idea. The disc is a
@@ -45,14 +45,15 @@ export function Pin({
         }}
       >
         <img
-          src={point.imageUrl ?? FALLBACK_IMAGE_URL}
+          referrerPolicy="no-referrer"
+          src={point.imageUrl ?? LOCATION_PLACEHOLDER}
           alt=""
           loading="lazy"
           className="h-full w-full object-cover"
           style={{ filter: selected ? 'none' : 'grayscale(.35)' }}
           onError={(event) => {
-            if (event.currentTarget.src.endsWith(FALLBACK_IMAGE_URL)) return
-            event.currentTarget.src = FALLBACK_IMAGE_URL
+            if (event.currentTarget.src.endsWith(LOCATION_PLACEHOLDER)) return
+            event.currentTarget.src = LOCATION_PLACEHOLDER
           }}
         />
         <span className="absolute inset-0" style={{ background: PIN_VEIL }} />

@@ -27,6 +27,7 @@ export function RecommendWaiting({ onCancel }: { onCancel: () => void }) {
   return (
     <div className="relative flex h-full items-center overflow-hidden">
       <img
+        referrerPolicy="no-referrer"
         src={SCENE.waitingBackdrop}
         alt=""
         aria-hidden

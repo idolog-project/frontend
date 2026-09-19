@@ -16,7 +16,7 @@ export function AuthLayout({
       {/* Decorative mood panel — alt="" so a screen reader goes straight to the
           one action on the page instead of a scenery description. */}
       <div className="relative hidden w-[55%] shrink-0 lg:block">
-        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+        <img referrerPolicy="no-referrer" src={imageUrl} alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-background/60" />
         <span className="absolute left-screen top-screen bg-gradient-to-r from-accent to-accent-end bg-clip-text font-display text-title-md text-transparent">
           Idolog

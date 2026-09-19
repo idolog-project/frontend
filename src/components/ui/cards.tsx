@@ -4,6 +4,7 @@ import { Camera } from 'lucide-react'
 
 import type { Course, FilmingLocation } from '@/api/schemas'
 import { useT } from '@/features/locale/useT'
+import { LOCATION_PLACEHOLDER } from '@/lib/placeholders'
 import { cn } from '@/lib/cn'
 import { useFormat } from '@/lib/useFormat'
 
@@ -63,9 +64,26 @@ export function SpotCard({
       <div className="relative h-32 shrink-0">
         {/* alt="" — the name is the heading directly below, so a description
             here would just announce it twice. */}
-        {location.imageUrl && (
-          <img src={location.imageUrl} alt="" className="h-full w-full object-cover" />
-        )}
+        {/* Falls back to the app's mark the same way a pin does. A handful of
+            the catalogue's photographs are hotlinked from blogs and news sites
+            and some of those will stop answering; a card that quietly shows
+            its mark reads better than one with a broken-image glyph in it. */}
+        <img
+          referrerPolicy="no-referrer"
+          // The map holds a hundred and twenty of these and a pin for each. Ask
+          // for all of them at once and the shared CDNs behind the catalogue
+          // start refusing some of the burst — which arrives as an onError and
+          // shows the placeholder over a photograph that exists. The panel only
+          // ever shows a few cards, so it should only ask for a few.
+          loading="lazy"
+          src={location.imageUrl ?? LOCATION_PLACEHOLDER}
+          alt=""
+          onError={(event) => {
+            if (event.currentTarget.src.endsWith(LOCATION_PLACEHOLDER)) return
+            event.currentTarget.src = LOCATION_PLACEHOLDER
+          }}
+          className="h-full w-full object-cover"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-surface to-transparent" />
         {distance && (
           <span className="absolute right-3 top-3 rounded border border-border bg-background/80 px-2 py-1 font-display text-label-caps text-text backdrop-blur-sm">
@@ -131,6 +149,7 @@ export function CourseCard({
     <>
       {first?.imageUrl && (
         <img
+          referrerPolicy="no-referrer"
           src={first.imageUrl}
           alt={t('saved.firstStopAlt', { name: first.name })}
           className="h-full w-full object-cover"
@@ -179,7 +198,7 @@ export function CourseCard({
               className="h-8 w-8 overflow-hidden rounded-full border border-border bg-surface-raised"
             >
               {place.imageUrl && (
-                <img src={place.imageUrl} alt="" className="h-full w-full object-cover" />
+                <img referrerPolicy="no-referrer" src={place.imageUrl} alt="" className="h-full w-full object-cover" />
               )}
             </li>
           ))}

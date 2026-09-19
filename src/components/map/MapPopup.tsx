@@ -120,7 +120,7 @@ export function MapPopup({
           >
             {/* alt="" — the name sits right beside it, so describing the photo
                 here would just announce the place twice. */}
-            <img src={point.imageUrl} alt="" className="h-full w-full object-cover" />
+            <img referrerPolicy="no-referrer" src={point.imageUrl} alt="" className="h-full w-full object-cover" />
             <div
               className={cn(
                 'absolute inset-0 from-surface to-transparent',

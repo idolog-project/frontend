@@ -30,7 +30,7 @@ export function OnboardingPage() {
     <div className="relative h-full overflow-hidden">
       {/* Decorative — and this is the screen where the user picks a language, so
           announcing a description in a language they may not read helps nobody. */}
-      <img src={backdrop} alt="" className="h-full w-full object-cover" />
+      <img referrerPolicy="no-referrer" src={backdrop} alt="" className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       {/* The 64px inset is a desktop luxury — on a 375px phone it would eat a

@@ -188,6 +188,7 @@ export function CourseResult({
                       {place.imageUrl && (
                         <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded md:h-16 md:w-16">
                           <img
+                            referrerPolicy="no-referrer"
                             src={place.imageUrl}
                             alt=""
                             loading="lazy"
