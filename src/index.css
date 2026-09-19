@@ -37,6 +37,43 @@ body {
   border: 0;
 }
 
+/* Scrollbars, quiet enough to belong to the panel they sit in.
+
+   `color-scheme: dark` above already darkens the platform bar, but it leaves a
+   full-width one that reads as furniture — beside the card panel it looked like
+   a second border, brighter than the panel's own. Thin, a rounded thumb in the
+   border colour, no track. It still takes its width rather than overlaying, so
+   nothing reflows when a list becomes long enough to scroll.
+
+   Set globally rather than per scroller: every scrolling surface in the app is
+   a dark panel and wants the same treatment, and the list of them keeps growing.
+
+   Both spellings are here on purpose. Chrome ignores the `::-webkit-` rules
+   once `scrollbar-color` is set, so the modern property wins where it exists
+   and the pseudo-elements cover the browsers where it does not. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-subtle);
+}
+
 /* Keyboard focus must stay visible — accessibility baseline in the brief. */
 :focus-visible {
   outline: 2px solid var(--color-accent);
