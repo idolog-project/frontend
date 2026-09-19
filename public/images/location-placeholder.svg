@@ -1,9 +1,45 @@
+<!--
+  What a map pin shows when its location has no photograph yet — two thirds of
+  the catalogue, for now.
+
+  The app's own viewfinder mark rather than a stock camera: the same four
+  brackets closed around a subject that the favicon carries and that
+  `ViewfinderFrame` draws over the detail hero, in the signature coral-to-violet
+  gradient. A pin without a picture then reads as this app's pin, not as a
+  missing asset.
+
+  Two things the pin imposes on the drawing:
+
+  1. The disc is a circle with `overflow: hidden`, so the corners of this square
+     are cut away. The brackets sit inside the inscribed circle (roughly 12–52
+     in this 64 box) instead of out at the corners where a viewfinder would
+     normally put them.
+  2. It is drawn at 32px most of the time, and under `grayscale(.35)` plus the
+     veil `PIN_VEIL` lays over it. Hence the heavy stroke and the solid ground —
+     fine lines and transparency both disappear at that size.
+-->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="촬영지 기본 이미지">
-  <rect width="64" height="64" rx="32" fill="#24232D"/>
-  <path d="M12 45.5 25.2 31l8.3 8.8 6-5.9L52 45.5V50H12Z" fill="#6E668C"/>
-  <path d="M17 28.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Z" fill="#F7B4C8"/>
-  <path d="M23 19h18a4 4 0 0 1 4 4v15H19V23a4 4 0 0 1 4-4Z" fill="#3D3A4E" stroke="#F6F3FA" stroke-width="2"/>
-  <path d="M27 19v-3h10v3M28 29h8" fill="none" stroke="#F6F3FA" stroke-linecap="round" stroke-width="2"/>
-  <circle cx="32" cy="28.5" r="4.5" fill="#F6F3FA"/>
-  <circle cx="32" cy="28.5" r="2.5" fill="#F36B9A"/>
+  <defs>
+    <linearGradient id="idolog-pin" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF5A6E" />
+      <stop offset="1" stop-color="#8A5CF6" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" fill="#15151B" />
+
+  <g
+    fill="none"
+    stroke="url(#idolog-pin)"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M14 23v-5a4 4 0 0 1 4-4h5" />
+    <path d="M41 14h5a4 4 0 0 1 4 4v5" />
+    <path d="M50 41v5a4 4 0 0 1-4 4h-5" />
+    <path d="M23 50h-5a4 4 0 0 1-4-4v-5" />
+  </g>
+
+  <circle cx="32" cy="32" r="7" fill="url(#idolog-pin)" />
 </svg>

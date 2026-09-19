@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useT } from '@/features/locale/useT'
 import { cn } from '@/lib/cn'
 import { DEFAULT_PIN_COLOR, MapCanvas, type MapPoint } from './MapCanvas'
-import { createPinElement, createUserDotElement } from './pinElement'
+import { PIN_BOX, createPinElement, createUserDotElement } from './pinElement'
 import { loadKakaoMaps, type KakaoLatLng, type KakaoMaps } from './loadKakao'
 
 type Props = {
@@ -149,10 +149,17 @@ export function KakaoMap({
       path.push(position)
 
       // Wrapper carries the counter-filter that cancels whatever the tiles are
-      // filtered by — a no-op while `MAP_FILTER` is `none`, and the thing that
-      // keeps each pin's photo true if it is ever turned back on.
+      // filtered by, and holds the pin's fixed footprint so selecting one never
+      // shifts what it points at — see `PIN_BOX`.
       const wrapper = document.createElement('div')
-      wrapper.style.cssText = `filter:${MAP_FILTER}`
+      wrapper.style.cssText = [
+        `filter:${MAP_FILTER}`,
+        'display:flex',
+        'align-items:flex-end',
+        'justify-content:center',
+        `width:${PIN_BOX.width}px`,
+        `height:${PIN_BOX.height}px`,
+      ].join(';')
       const el = createPinElement(
         point,
         false,

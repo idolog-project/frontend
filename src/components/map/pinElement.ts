@@ -29,6 +29,30 @@ export function pinGeometry(selected: boolean) {
   }
 }
 
+/** Disc, then the pointer under it, less the 1px they overlap by. */
+const pinHeight = (selected: boolean) => {
+  const { size, tail } = pinGeometry(selected)
+  return size + tail + 2 - 1
+}
+
+/**
+ * The footprint a pin occupies whatever state it is in — sized for the larger,
+ * selected one.
+ *
+ * Selecting a pin grows it from 32px to 46px. Left to size itself, the overlay
+ * element changes with it, and the anchor Kakao worked out when the element was
+ * placed no longer describes the element it is holding: the pin drifts, and the
+ * coordinate it points at moves while the reader is looking at it.
+ *
+ * So the box never changes. The pin is drawn bottom-centred inside it, which
+ * pins the pointer tip to the same spot on the map and lets the disc grow
+ * upward into room that was already reserved.
+ */
+export const PIN_BOX = {
+  width: SIZE.selected,
+  height: pinHeight(true),
+} as const
+
 /**
  * "You are here", as an element for Kakao's CustomOverlay.
  *
