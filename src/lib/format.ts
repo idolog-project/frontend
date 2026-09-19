@@ -52,10 +52,3 @@ export function formatDate(locale: Locale, iso: string | null) {
     day: 'numeric',
   }).format(date)
 }
-
-/** Default start time for the trip form: the next whole hour. */
-export function nextWholeHour(now = new Date()): string {
-  const next = new Date(now)
-  next.setHours(now.getHours() + 1, 0, 0, 0)
-  return `${String(next.getHours()).padStart(2, '0')}:00`
-}

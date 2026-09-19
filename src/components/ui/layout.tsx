@@ -59,13 +59,21 @@ export function SectionHeader({
 export function Disclosure({
   summary,
   hint,
+  defaultOpen = false,
   children,
 }: {
   summary: string
   hint?: string
+  /**
+   * Whether it starts open. Worth setting where the panel holds settings people
+   * are expected to reach for — folded away, they read as advanced options and
+   * go untouched, and the defaults inside them become the only answer anyone
+   * gives.
+   */
+  defaultOpen?: boolean
   children: ReactNode
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const panelId = useId()
 
   return (

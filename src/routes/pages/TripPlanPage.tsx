@@ -21,7 +21,15 @@ import { Skeleton } from '@/components/ui/states'
 import { useT } from '@/features/locale/useT'
 import { usePlanParams } from '@/features/plan/usePlanParams'
 import { cn } from '@/lib/cn'
-import { nextWholeHour } from '@/lib/format'
+
+/**
+ * The hour the form starts on.
+ *
+ * Nine, not the next whole hour: someone planning at eleven at night is not
+ * planning to leave at midnight, and the field would open on an answer they
+ * have to undo. A day trip begins in the morning, so it opens on one.
+ */
+const DEFAULT_START_TIME = '09:00'
 
 export function TripPlanPage() {
   const t = useT()
@@ -144,7 +152,11 @@ export function TripPlanPage() {
         </div>
       </section>
 
-      <Disclosure summary={t('plan.more')} hint={t('plan.moreHint')}>
+      {/* Open from the start. Folded, these read as advanced options nobody
+            has to touch, and the whole form is answered with two chips — the
+            hour, the length and the party size then reach the recommender as
+            defaults nobody chose. */}
+        <Disclosure summary={t('plan.more')} hint={t('plan.moreHint')} defaultOpen>
         {/* Every control below is sized for a thumb on a phone (44px of height,
             full-width hit areas) and handed back its compact desktop shape at
             `md`. `text-body-md` on the text inputs is also what stops iOS from
@@ -156,7 +168,7 @@ export function TripPlanPage() {
             </span>
             <input
               type="time"
-              value={values.startTime ?? nextWholeHour()}
+              value={values.startTime ?? DEFAULT_START_TIME}
               onChange={(e) => patch({ startTime: e.target.value })}
               className="min-h-11 border-b border-border bg-transparent py-2 text-body-md outline-none focus:border-primary md:min-h-0"
             />
