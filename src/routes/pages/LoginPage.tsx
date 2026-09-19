@@ -5,7 +5,7 @@ import { startGoogleLogin } from '@/api/endpoints'
 import { Button } from '@/components/ui/Button'
 import { Eyebrow } from '@/components/ui/Chip'
 import { useT } from '@/features/locale/useT'
-import { randomBackdrop } from '@/mocks/images'
+import { useLocationBackdrop } from '@/features/backdrop/useLocationBackdrop'
 import { AuthLayout } from './AuthLayout'
 
 /** Google's mark, inlined so no external request is needed to render it. */
@@ -40,13 +40,12 @@ export function LoginPage() {
   // the moment between the click and the browser giving up this document.
   const [leaving, setLeaving] = useState(false)
   /**
-   * A different frame each time this screen is reached.
-   *
-   * Held in state so it survives the re-render that `leaving` causes — picking
-   * while rendering would swap the photograph at the moment the button is
-   * pressed, which is the one moment nothing should move.
+   * A different filming location each time this screen is reached. Chosen once
+   * per mount inside the hook, so the re-render that `leaving` causes does not
+   * swap the photograph at the moment the button is pressed — the one moment
+   * nothing should move.
    */
-  const [backdrop] = useState(randomBackdrop)
+  const backdrop = useLocationBackdrop()
 
   // Set by the callback route when the round trip came back without a session.
   const failed = params.get('error') === 'oauth'

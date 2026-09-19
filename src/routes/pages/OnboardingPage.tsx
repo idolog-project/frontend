@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components/ui/Button'
 import { LOCALES, LOCALE_LABEL, useLocaleStore, type Locale } from '@/features/locale/store'
 import { useT } from '@/features/locale/useT'
-import { randomBackdrop } from '@/mocks/images'
+import { useLocationBackdrop } from '@/features/backdrop/useLocationBackdrop'
 
 /**
  * The one screen the system allows to be a single quiet moment: full-bleed
@@ -16,10 +15,10 @@ export function OnboardingPage() {
   const setLocale = useLocaleStore((s) => s.setLocale)
 
   /**
-   * A different frame each visit. The gate shows this screen once per visit, so
-   * once per mount is once per visit.
+   * A different filming location each visit. The gate shows this screen once
+   * per visit, so once per mount is once per visit.
    */
-  const [backdrop] = useState(randomBackdrop)
+  const backdrop = useLocationBackdrop()
 
   const choose = (locale: Locale) => {
     setLocale(locale)
