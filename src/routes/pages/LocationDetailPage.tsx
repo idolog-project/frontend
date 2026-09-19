@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/Button'
 import { ButtonLink } from '@/components/ui/ButtonLink'
 import { Eyebrow, InfoChip } from '@/components/ui/Chip'
 import { SectionHeader } from '@/components/ui/layout'
-import { GalleryStrip, Hero, ViewfinderFrame } from '@/components/ui/media'
+import { Hero, ViewfinderFrame } from '@/components/ui/media'
 import { ErrorState, Skeleton } from '@/components/ui/states'
 import { messageFor } from '@/features/auth/useAuth'
 import { useT } from '@/features/locale/useT'
+import { ReviewSection } from '@/features/review/ReviewSection'
 import { cn } from '@/lib/cn'
 import { useFormat } from '@/lib/useFormat'
-import { SCENE } from '@/mocks/images'
 
 /**
  * Hero height, shared by the skeleton so the two cannot drift.
@@ -188,16 +188,11 @@ export function LocationDetailPage() {
             </p>
           </section>
 
-          <section className="flex flex-col gap-4">
-            <SectionHeader
-              title={t('detail.gallery')}
-              meta={t('detail.gallerySwipe')}
-            />
-            {/* ASSUMPTION: no gallery field on the API yet — seeded for now.
-                alt="" until the API carries a description per image; an index
-                like "photo 2" is noise to a screen reader, not information. */}
-            <GalleryStrip images={SCENE.gallery.map((url) => ({ url, alt: '' }))} />
-          </section>
+          {/* Replaced the gallery. Its photographs were seed art standing in for
+              a field the API never grew, so it showed the same three frames on
+              every location — decoration that said nothing about the place.
+              What someone who went can tell you is worth the room instead. */}
+          <ReviewSection locationId={location.id} />
         </div>
 
         <aside className="relative z-10 flex flex-col gap-4 lg:sticky lg:top-12 lg:self-start">
