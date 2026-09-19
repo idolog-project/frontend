@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Star } from 'lucide-react'
 
 import { SectionHeader } from '@/components/ui/layout'
@@ -15,9 +15,9 @@ const STARS = [1, 2, 3, 4, 5] as const
  * Reviews of a filming location: what people found when they got there.
  *
  * UI only. There is no reviews endpoint yet, so the list is seeded development
- * content and the form posts nowhere — pressing 등록하기 says so rather than
- * pretending it worked, because a form that silently swallows what someone
- * wrote is worse than one that admits it is not connected.
+ * content and the form posts nowhere — the first press of 등록하기 says so
+ * rather than pretending it worked, because a form that silently swallows what
+ * someone wrote is worse than one that admits it is not connected.
  *
  * The seam for whoever wires it: replace `REVIEW_SEED` with the query, and
  * `onSubmit` with the mutation. Nothing else here needs to change.
@@ -31,6 +31,20 @@ export function ReviewSection({ locationId }: { locationId: number }) {
 
   const reviews = REVIEW_SEED[locationId] ?? []
   const ready = rating > 0 && body.trim().length > 0
+
+  /**
+   * Says the form is not connected, once.
+   *
+   * Repeating it on every press turns a piece of information into nagging — the
+   * reader was told, and telling them again says nothing new. A ref rather than
+   * state because nothing on screen depends on it.
+   */
+  const notified = useRef(false)
+  const notifyOnce = () => {
+    if (notified.current) return
+    notified.current = true
+    toast.show(t('review.notWired'))
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -77,10 +91,7 @@ export function ReviewSection({ locationId }: { locationId: number }) {
         />
 
         <div className="flex justify-end">
-          <Button
-            disabled={!ready}
-            onClick={() => toast.show(t('review.notWired'))}
-          >
+          <Button disabled={!ready} onClick={notifyOnce}>
             {t('review.submit')}
           </Button>
         </div>
