@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { ChevronDown, ChevronUp, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
@@ -65,6 +65,8 @@ export function MapHomePage() {
   const [params, setParams] = useSearchParams()
   const [focusedId, setFocusedId] = useState<string | null>(null)
   const [listOpen, setListOpen] = useState(listOpensByDefault)
+  const [othersOpen, setOthersOpen] = useState(false)
+  const othersToggleRef = useRef<HTMLButtonElement>(null)
   const listId = useId()
   const scrollerId = useId()
 
@@ -119,6 +121,35 @@ export function MapHomePage() {
   }, [idols, selectedIdols])
 
   const colors = useMemo(() => idolColors(legendIdols), [legendIdols])
+
+  /**
+   * Brings the opened drawer into view.
+   *
+   * The list is capped so the panel never grows, which means the rows that just
+   * appeared are below the fold of its own scroller — press it and nothing
+   * seems to happen. Putting the row that was pressed at the top of the
+   * scroller shows what it opened.
+   */
+  useEffect(() => {
+    if (!othersOpen) return
+    othersToggleRef.current?.scrollIntoView({ block: 'start' })
+  }, [othersOpen])
+
+  /**
+   * Everyone the legend does not name, most-filmed first.
+   *
+   * Sorted the same way the named five were picked, so opening the drawer
+   * continues the order rather than starting a new one.
+   */
+  const otherIdols = useMemo(() => {
+    const named = new Set(legendIdols.map((idol) => idol.id))
+    return idols
+      .filter((idol) => !named.has(idol.id))
+      .toSorted(
+        (a, b) =>
+          b.locationCount - a.locationCount || a.name.localeCompare(b.name, 'ko'),
+      )
+  }, [idols, legendIdols])
 
   /**
    * A location carries only `idolId`s, and the cards want the names.
@@ -255,7 +286,10 @@ export function MapHomePage() {
           <p className="mb-2 font-display text-label-caps uppercase text-text-subtle">
             {t('home.popularIdols')}
           </p>
-          <ul className="flex flex-col gap-0.5">
+          {/* Capped at about the height the five named idols already take, so
+              opening the rest scrolls inside the panel instead of growing it up
+              the screen and over the map it is explaining. */}
+          <ul className="flex max-h-40 flex-col gap-0.5 overflow-y-auto overscroll-contain">
             {legendIdols.map((idol) => {
               const active = selectedIds.has(idol.id)
               return (
@@ -285,21 +319,65 @@ export function MapHomePage() {
               )
             })}
 
-            {/* Without this the grey pins are unexplained — the reader cannot
-                tell a quiet idol from a broken colour. */}
-            {selectedIds.size === 0 && idols.length > legendIdols.length && (
-              <li className="flex items-center gap-2 px-1.5 py-1 text-caption text-text-subtle">
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ background: UNFEATURED_PIN_COLOR }}
-                />
-                <span className="flex-1 truncate">{t('home.otherIdols')}</span>
-                <span className="tabular-nums">
-                  {idols.length - legendIdols.length}
-                </span>
+            {/* Two jobs in one row. It explains the grey pins — without it the
+                reader cannot tell a quiet idol from a broken colour — and it
+                opens the rest of the catalogue, which is otherwise only
+                reachable by typing a name you already have to know. */}
+            {otherIdols.length > 0 && (
+              <li>
+                <button
+                  ref={othersToggleRef}
+                  type="button"
+                  aria-expanded={othersOpen}
+                  onClick={() => setOthersOpen((open) => !open)}
+                  className="-mx-1.5 flex w-[calc(100%+0.75rem)] items-center gap-2 rounded px-1.5 py-1 text-left text-caption text-text-subtle transition-colors hover:bg-surface-raised hover:text-text"
+                >
+                  <span
+                    aria-hidden
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ background: UNFEATURED_PIN_COLOR }}
+                  />
+                  <span className="flex-1 truncate">{t('home.otherIdols')}</span>
+                  <span className="tabular-nums">{otherIdols.length}</span>
+                  {othersOpen ? (
+                    <ChevronUp size={12} strokeWidth={2} aria-hidden />
+                  ) : (
+                    <ChevronDown size={12} strokeWidth={2} aria-hidden />
+                  )}
+                </button>
               </li>
             )}
+
+            {/* The uncoloured rest, filterable all the same. Their dot is the
+                grey their pins actually draw in, so the row does not promise a
+                colour the map will not keep. */}
+            {othersOpen &&
+              otherIdols.map((idol) => {
+                const active = selectedIds.has(idol.id)
+                return (
+                  <li key={idol.id}>
+                    <button
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => toggleIdol(idol.id)}
+                      className={cn(
+                        '-mx-1.5 flex w-[calc(100%+0.75rem)] items-center gap-2 rounded px-1.5 py-1 text-left text-caption transition-colors hover:bg-surface-raised',
+                        active ? 'bg-surface-raised text-primary' : 'text-text-muted',
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: UNFEATURED_PIN_COLOR }}
+                      />
+                      <span className="flex-1 truncate">{idol.name}</span>
+                      <span className="tabular-nums text-text-subtle">
+                        {idol.locationCount}
+                      </span>
+                    </button>
+                  </li>
+                )
+              })}
           </ul>
         </div>
       )}
