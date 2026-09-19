@@ -79,18 +79,25 @@ export function SpotCard({
           {songTitle || location.name}
         </h3>
 
-        <dl className="flex flex-col gap-0.5 text-body-sm">
+        {/* A grid, not a stack of rows: the first column takes the width of the
+            longest label, so both values start on the same line down the card.
+            Laid out per row instead, "장소" and "아티스트" would push their
+            values to different places and the pair would read as ragged.
+
+            `auto` rather than a fixed width, because the longest label is a
+            different length in each language. */}
+        <dl className="grid grid-cols-[auto_1fr] gap-x-1.5 gap-y-0.5 text-body-sm">
           {songTitle && (
-            <div className="flex gap-1.5">
-              <dt className="shrink-0 text-text-subtle">{t('card.place')}</dt>
-              <dd className="min-w-0 text-text-muted">{location.name}</dd>
-            </div>
+            <>
+              <dt className="text-text-subtle">{t('card.place')}</dt>
+              <dd className="min-w-0 truncate text-text-muted">{location.name}</dd>
+            </>
           )}
           {idolName && (
-            <div className="flex gap-1.5">
-              <dt className="shrink-0 text-text-subtle">{t('card.artist')}</dt>
-              <dd className="min-w-0 text-text-muted">{idolName}</dd>
-            </div>
+            <>
+              <dt className="text-text-subtle">{t('card.artist')}</dt>
+              <dd className="min-w-0 truncate text-text-muted">{idolName}</dd>
+            </>
           )}
         </dl>
         {/* `max-w-full` bounds the `w-max` pill: the tracked caps label is the

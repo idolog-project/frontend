@@ -54,7 +54,7 @@ export const ko = {
 
   // The colon rides in the value: Chinese wants its own full-width one.
   'card.place': '장소:',
-  'card.artist': '가수:',
+  'card.artist': '아티스트:',
 
   'map.detail': '자세히 보기',
   'map.close': '닫기',
@@ -430,7 +430,7 @@ export const zh: Record<MessageKey, string> = {
   'home.expandList': '展开列表',
 
   'card.place': '地点：',
-  'card.artist': '歌手：',
+  'card.artist': '艺人：',
 
   'map.detail': '查看详情',
   'map.close': '关闭',
